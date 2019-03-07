@@ -1,0 +1,781 @@
+<html>
+
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+
+body 
+{
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+input[type="text"] 
+{
+    display: block;
+    margin : 0 auto;
+}
+
+.topnav 
+{
+  overflow: hidden;
+  background-color: #333;
+}
+
+.topnav a 
+{
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 0px 51px 0px 59px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.topnav a:hover 
+{
+  background-color: #ddd;
+  color: black;
+}
+
+.topnav a.active 
+{
+  background-color: #4CAF50;
+  color: white;
+}
+
+</style>
+</head>
+
+
+<body>
+<div class = "topnav"></div>
+<div id ="div_cart1" style="display:inline-table;float:left;margin-right:500;margin-top:15;"> </div>
+<div id ="div_style" style="display:inline-table;float:left;background-color:lightgrey; width:20%;height:5%;margin-top:15;position:fixed">
+<span id = "message1" style="margin-left:35;margin-bottom:35;"></span><br/>
+<button id = "checkout1" hidden="hidden" style="margin-left:35;background-color:orange;">Proceed to Checkout</button></br></br>
+</div>
+<script>
+
+var cart_product = [];
+var delivery_arr = [];
+var index;
+var product_arr = [];
+var order_products = [];
+var wish_arr = [];
+
+var email_id;
+
+var total_item = 0;
+var total_sum = 0;
+var id_helper_wish = 0;
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{
+	email_id = JSON.parse(localStorage.currentUser);
+	retrieve_from_local_storage();
+	add_style();
+	span_message();
+}
+
+function retrieve_from_local_storage()
+{
+var flag = 0;
+	if(localStorage.cartRecord)        //those whose checkout is -1...........
+	{
+		cart_product = JSON.parse(localStorage.cartRecord);
+		var email_id = JSON.parse(localStorage.currentUser);
+		
+		// put heading shopping cart.............
+		var br1=document.createElement("br");
+		var span = document.createElement('span');
+		var text = document.createTextNode("Shopping Cart");
+		span.appendChild(text);
+		var div_cart_list = document.getElementById("div_cart1");
+		div_cart_list.appendChild(span);
+				
+		// display shopping cart...................
+		for(var i = 0; i<cart_product.length;i++)
+		{
+			if(cart_product[i].User == email_id)
+			{
+				create_cart_list(cart_product[i].Name,cart_product[i].Price,cart_product[i].Id_cart,cart_product[i].Quantity);
+				total_item = parseInt(total_item)+parseInt(cart_product[i].Quantity);
+				total_sum = total_sum + (cart_product[i].Quantity*cart_product[i].Price);
+				flag=1;
+			}
+		}
+		if(flag==0)
+		{
+		   nothing_to_display();
+		}
+	}
+	
+	if(localStorage.productRecord)
+	{
+		product_arr = JSON.parse(localStorage.productRecord);
+	}
+	
+	if(localStorage.deliveryRecord)
+	{
+		delivery_arr = JSON.parse(localStorage.deliveryRecord);
+	}
+}
+
+function create_cart_list(name,price,id,quant)
+{
+	var div_each_cart = document.createElement("div");
+	div_each_cart.setAttribute("id", id);
+	var br1=document.createElement("br");
+	var br2=document.createElement("br");
+			
+		
+	var detail_name="Name: "+name;
+	var detail_Price="Price: "+price;
+			
+	var li_name = document.createElement("li");
+	li_name.innerHTML=detail_name;
+				
+	var li_Price = document.createElement("li");
+	li_Price.innerHTML=detail_Price;
+
+	var input =  document.createElement("input");
+	input.setAttribute("type","text");
+	var input_id = "input_id"+id;
+	input.setAttribute("id",input_id);
+	input.defaultValue = quant;
+	input.addEventListener("keyup", function()
+									{
+										update1(this.id);
+									}
+						  );
+						  
+	input.addEventListener("blur", function()
+									{
+										var index = check_in_cart_array(id);
+										insert_something(this.id,cart_product[index].Quantity);
+									}
+						  );
+						  
+	
+	var button_delete = create_button(id,"delete",0);
+	
+	var button_save = create_button(id,"Save for Later/Wish List",2);
+	
+	div_each_cart.appendChild(li_name);
+	div_each_cart.appendChild(li_Price);
+	
+	div_each_cart.appendChild(input);                      
+	div_each_cart.appendChild(button_delete); 
+	div_each_cart.appendChild(button_save);
+
+	
+	div_each_cart.appendChild(br1);  div_each_cart.appendChild(br2);
+	
+	
+	
+									 
+	var div_cart_list = document.getElementById("div_cart1");
+	
+	div_cart_list.appendChild(div_each_cart);
+			
+}
+
+function span_message()
+{
+	var str = "";
+	var button = document.getElementById("checkout1");
+	if(total_item == 0)
+	{
+		str = "Your Shopping Cart is empty";
+		button.style.display = "none";
+	}
+	
+	if(total_item == 1)
+	{
+		str = "Subtotal ( "+total_item+" item): ₹"+total_sum;
+		button.style.display = "block";
+		button.addEventListener("click", function()
+											{
+												pass();
+											}
+								);
+	}
+	
+	if(total_item>1)
+	{
+		str = "Subtotal ( "+total_item+" items): ₹"+total_sum;
+		button.style.display = "block";
+		button.addEventListener("click", function()
+											{
+												pass();
+											}
+								);
+	}
+	var span = document.getElementById("message1");
+	span.innerHTML = str;
+}
+
+function update1(id)
+{
+	var value  = document.getElementById(id).value;
+	var div_each_cart = document.getElementById(id).parentElement;
+	if(value.length>0)
+	{
+		var element = document.getElementById(id).nextSibling.nextSibling;            //get   save for later button...............
+		delete_next_siblings(element);                                  // delete br tags br1 and br2.............
+		var br = document.createElement("br");
+		var button = create_button(id,"update",1);
+		br.appendAfter(element);
+		button.appendAfter(br);
+	}
+	
+	else if(value.length == 0)
+	{
+		delete_last_child(div_each_cart);         // delete update button...............
+	}
+}
+
+function create_button(id,str,signal)
+{
+	var button = document.createElement("BUTTON");
+	var  button_text = document.createTextNode(str);
+	button.appendChild(button_text);
+	
+	if(signal == 0)
+	{
+		button.addEventListener('click',function()            // delete     id_cart .... id of div
+													{	
+														delete_all(id);
+													}
+									   );	
+	}
+	
+	else if(signal == 1)                     // update .......... input vale id 
+	{
+		button.addEventListener('click',function()
+													{	
+														check(id);
+													}
+									   );
+	}
+	else if(signal == 2)                  //wish list.............. id_cart ... id of div
+	{
+		button.addEventListener('click',function()
+													{	
+														save_for_later(id);
+													}
+									   );
+	}
+	button.style.margin="15";
+	button.style.backgroundColor="orange";
+    return button;
+}
+
+function check(id)
+{
+	var value  = document.getElementById(id).value;
+	var flag = 0;
+	var error = 0;
+	
+	var parent = document.getElementById(id).parentElement;
+	var p_id = parent.getAttribute("id");
+	var index = check_in_cart_array(p_id);
+	
+	for(var i=0;i<value.length;i++)
+	{
+		if(value.charCodeAt(i)>=48 && value.charCodeAt(i)<=57)
+		{
+			flag=1;
+		}
+		else if(flag == 1)
+		{
+			error = 1;
+			break;
+		}
+		else if(flag == 0 && value.charCodeAt(i)!=32)
+		{
+			error = 1;
+			break;
+		}
+	}
+	if(error == 1)
+	{
+		alert("wrong format of quantity");
+		var x  = document.getElementById(id);
+		x.value = cart_product[index].Quantity;;
+	}
+	else if(error == 0 && flag == 1) 
+	{
+		//alert("change");
+	}
+	else
+	{
+		var x  = document.getElementById(id);
+		x.value = cart_product[index].Quantity;
+	}
+	
+	changes(index,id);
+}
+
+Element.prototype.appendAfter = function(element) 
+{
+	element.parentNode.insertBefore(this, element.nextSibling);
+},false;
+
+
+function delete_next_siblings(node)
+{
+	while (node.nextSibling) 
+	{
+       node.parentNode.removeChild(node.nextSibling)      // delete br tags br1 and br2.............
+    }
+}
+
+function delete_last_child(node)
+{
+	var element = node.lastChild;
+	var value = element.textContent;
+     
+	if(value  == "update")
+	{
+		node.removeChild(node.lastChild);
+		
+		var br1=document.createElement("br");
+		var br2=document.createElement("br");
+		
+		node.appendChild(br1);  node.appendChild(br2);
+	}
+	
+}
+
+function insert_something(id,quant)
+{
+	var flags = 1;
+	var value  = document.getElementById(id).value;
+	if(value.length == 0)
+	{
+		var x = document.getElementById(id);
+		x.value = quant;
+	}
+	else
+	{
+		for(var i = 0;i<value.length;i++)
+		{
+			if(value.charCodeAt(i)==32)
+			{
+			
+			}
+			else
+			{
+				flags = 0;
+				break;
+			}
+		}
+		if(flags == 1)
+		{
+			var x = document.getElementById(id);
+			x.value = quant;
+		}
+	}
+}
+function delete_all(id)
+{
+	var prod_id;
+	var quant;
+	for(var i = 0;i<cart_product.length;i++)
+	{
+		if(cart_product[i].Id_cart == id)
+		{
+			prod_id = cart_product[i].Id_product;
+			quant = cart_product[i].Quantity;
+			
+			total_item = total_item - quant;
+			total_sum = total_sum - (quant*cart_product[i].Price);
+			
+			cart_product.splice(i,1);
+			modify_local_storage();
+
+			
+			update_product_arr(prod_id,quant);
+			
+			
+			delete_div(id);
+			span_message();
+			
+			break;
+		}
+	}
+	if(total_item == 0)
+	{
+	  
+		nothing_to_display();
+	}
+	
+}
+
+function save_for_later(id)      // id of cart.........
+{
+	var index = check_in_cart_array(id);
+	// think wish list mein add bhi nhi hua or cart list se remove ho gyaa........ wrong so do opp.
+	// first add it in wish list then remove from cart ----------
+	fill_wish_arr();
+	
+	var today = get_date();
+	
+	var wish_obj = create_object_wish(index,today);
+	wish_arr.push(wish_obj);
+	id_helper_wish++;
+	
+	add_in_local_storage_wish();
+	
+	total_item = parseInt(total_item)-parseInt(cart_product[index].Quantity);
+	total_sum = total_sum - (cart_product[index].Quantity*cart_product[index].Price);
+	
+	cart_product.splice(index,1);
+	modify_local_storage();
+	
+	delete_div(id);
+	span_message();
+}
+
+
+function fill_wish_arr()
+{
+	if(localStorage.wishRecord)
+	{
+	    var maxw = -1;
+		wish_arr = JSON.parse(localStorage.wishRecord);
+		for(var i=0;i<wish_arr.length;i++)
+		{
+			if(maxw<=wish_arr[i].Id_wish)
+			{
+				maxw = wish_arr[i].Id_wish;
+			}
+		}
+		maxw++;
+		id_helper_wish = maxw;
+		//alert(maxw);
+	}
+}
+
+function get_date()
+{
+	var today = new Date();
+	var dd = today.getDate();
+	var mm = today.getMonth()+1;                //January is 0!
+	var yyyy = today.getFullYear();
+
+	if(dd<10) {
+		dd = '0'+dd
+	} 
+
+	if(mm<10) {
+		mm = '0'+mm
+	} 
+
+	today = mm + '/' + dd + '/' + yyyy;
+	return today;
+}
+
+function create_object_wish(index,today)
+{
+	var obj =
+		{
+			Name: cart_product[index].Name,
+			Discription: cart_product[index].Discription,
+			Price: cart_product[index].Price,
+			Quantity: cart_product[index].Quantity,
+			User:email_id,
+			Order_Date:today,
+			Id_wish:id_helper_wish,
+			Id_product: cart_product[index].Id_product,
+			Checkout: -1
+	    };
+	
+	return obj;
+}
+
+function add_in_local_storage_wish()
+{
+	localStorage.wishRecord = JSON.stringify(wish_arr);
+}
+
+function modify_local_storage()
+{
+	localStorage.cartRecord = JSON.stringify(cart_product);
+}
+
+function delete_div(id)
+{
+	var node = document.getElementById(id);
+	while (node.firstChild) 
+	{
+		node.removeChild(node.firstChild);
+	}
+	node.parentNode.removeChild(node);
+}
+
+function update_product_arr(prod_id,quant)
+{
+	for(var i =0;i<product_arr.length;i++)
+	{
+		if(product_arr[i].Id == prod_id)
+		{
+			product_arr[i].Quantity = parseInt(quant)+ parseInt(product_arr[i].Quantity);
+			modify_local_storage_product_admin();
+		}
+	}
+}
+
+function modify_local_storage_product_admin()
+{
+	localStorage.productRecord = JSON.stringify(product_arr);
+}
+
+function check_in_cart_array(id)
+{
+	for(var i=0;i<cart_product.length;i++)
+	{
+		if(cart_product[i].Id_cart == id)
+		{
+			return i;
+		}
+	}
+
+}
+
+function changes(index,id)   //cart_product[index].Id_product,cart_product[index].Quantity
+{
+	var value  = document.getElementById(id).value;
+	var x = value.trim();
+	
+	for(var i = 0;i<product_arr.length;i++)
+	{
+		if(cart_product[index].Id_product == product_arr[i].Id)
+		{
+			if(cart_product[index].Quantity == x)
+			{
+			
+			}
+			
+			if(parseInt(x)>parseInt(cart_product[index].Quantity))
+			{
+				var diff = x - cart_product[index].Quantity;
+				
+				if(parseInt(product_arr[i].Quantity)>=parseInt(diff))
+				{
+					cart_product[index].Quantity = parseInt(x);
+					modify_local_storage();
+					
+					total_item = parseInt(total_item) + parseInt(diff);
+					total_sum = parseInt(total_sum)+parseInt(diff*cart_product[index].Price);
+					
+					
+					product_arr[i].Quantity = product_arr[i].Quantity - diff;
+					modify_local_storage_product_admin();
+					
+					span_message();
+					
+				}
+				else
+				{
+					alert("you are not allowed to buy this much quantity");
+					
+					var element = document.getElementById(id);
+					element.value = cart_product[index].Quantity;
+				}
+			}
+			else
+			{
+				if(x == 0)
+				{
+					delete_all2(index);
+					break;
+				}
+				else
+				{
+					var diff = cart_product[index].Quantity - x;
+					
+					cart_product[index].Quantity = parseInt(x);
+					modify_local_storage();
+					
+					total_item = parseInt(total_item) - parseInt(diff);
+					total_sum = parseInt(total_sum) - parseInt(diff*cart_product[index].Price);
+					
+					
+					product_arr[i].Quantity = parseInt(product_arr[i].Quantity) + parseInt(diff);
+					modify_local_storage_product_admin();
+					
+					span_message();
+				}
+			}
+		}
+		var parent = document.getElementById(cart_product[index].Id_cart);
+		delete_last_child(parent);
+	}
+}
+
+function delete_all2(index)
+{
+	var quant = cart_product[index].Quantity;
+	
+	var prod_id = cart_product[index].Id_product;
+	
+	total_item = total_item - quant;
+	total_sum = total_sum - (quant*cart_product[index].Price);
+	
+	var div_id = cart_product[index].Id_cart;
+	
+	cart_product.splice(index,1);
+	modify_local_storage();
+
+			
+	update_product_arr(prod_id,quant);
+			
+			
+	delete_div(div_id);
+	span_message();
+}
+
+function nothing_to_display()
+{
+	var div_style = document.getElementById("div_style");
+	div_style.style.display="none";
+	
+	var br1=document.createElement("br");
+	
+	var span = document.createElement('span');
+	var text = document.createTextNode("Your Shopping Cart is empty");
+	span.appendChild(text);
+	
+								 
+	var div_cart_list = document.getElementById("div_cart1");
+	
+	div_cart_list.appendChild(br1);
+	div_cart_list.appendChild(span);
+	
+}
+
+
+function pass()
+{
+	window.location = 'delivery information.html';
+}
+
+
+function add_style()
+{
+
+	var div = document.getElementsByClassName("topnav");
+	
+    var div2 = document.createElement("div");
+	
+	var input = document.createElement("input");
+	input.setAttribute('type',"text"); 
+	input.style.height="30px";
+	input.style.fontSize="30pt";
+	
+	var br1 = document.createElement("br");
+	var br2 = document.createElement("br");
+	
+	var div3 = document.createElement("div");
+	
+	var span_name = document.createElement('span');
+	var span_address = document.createElement('span');
+	
+	index = get_index();
+    if(index!=-1)
+	{
+		var str_name = "Deliver to "+delivery_arr[index].Name;
+		var str_address = delivery_arr[index].Town+" "+delivery_arr[index].Pin;
+		
+		var text_name = document.createTextNode(str_name);
+		var text_address = document.createTextNode(str_address);
+		
+		span_name.appendChild(text_name);
+		span_address.appendChild(text_address);
+		
+		div3.appendChild(span_name);
+		div3.appendChild(br2);
+		div3.appendChild(span_address);
+		div3.style.color = 'white';
+		div3.style.display = 'inline-block';
+	}
+	var div4 = document.createElement("div");
+	
+	var a2Tag = create_anchor("cart.html","Home");
+	
+	var a3Tag = create_anchor("javascript:void(0)","Shop by Category");
+	
+	var a4Tag = create_anchor("your orders.html","Your Orders");
+	
+	var a5Tag = create_anchor("javascript:void(0)","Wish list");  
+
+	var a6Tag = create_anchor("javascript:void(0)","Your Account");
+	
+	var a7Tag = create_anchor("javascript:void(0)","Settings");
+	
+    var div5 = document.createElement("div");
+	
+	var img = document.createElement("img"); 
+	img.src = 'cart logo1.jpg';  
+	img.width = "40";
+	img.height = "30";
+	div5.appendChild(img);
+	div5.style.display = 'inline-block';
+	
+	div5.addEventListener("click",function()
+								  {
+										open_page();
+								  }
+						 );
+	
+	div4.appendChild(a2Tag);
+	div4.appendChild(a3Tag);
+	div4.appendChild(a4Tag);
+	div4.appendChild(a5Tag);
+	div4.appendChild(a6Tag);
+	div4.appendChild(a7Tag);
+	div4.style.display = 'inline-block';
+	
+	
+	div2.appendChild(input);
+	div2.appendChild(div3);
+	div2.appendChild(div4);
+	div2.appendChild(div5);
+	
+	div[0].appendChild(div2);
+}
+
+function create_anchor(href,str)
+{
+	var a = document.createElement('a');
+	a.setAttribute('href',href);
+	a.innerHTML = str;
+	
+	return a;
+}
+
+function get_index()
+{
+	for(var i=0;i<delivery_arr.length;i++)
+	{
+		if(email_id==delivery_arr[i].Email)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+function open_page()
+{
+	 var win = window.location("javascript:void(0)");
+}
+</script>
+</body>
+</html>

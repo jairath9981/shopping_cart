@@ -1,0 +1,789 @@
+<html>
+<body>
+<h1 id="h1"> Add Products </h1>
+<div id="productPanel1"></div>
+<input type="text" style="visibility: hidden" placeholder= "Seach by product name" id="input_search"></input></br></br>
+<div id="div_product_list1"></div>
+<script>
+
+var h1 = document.getElementById("h1");
+
+var id_helper = 0;
+var product_arr = [];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+h1.addEventListener("click", function()
+                           {
+								if(h1.style.display === "block")
+								{
+								     h1.style.display = "none";
+									 var flag = 0;     // set flag = 0 to indicate add new product..
+									 createProductPanel(flag,-1);
+								}
+								else
+								{
+									h1.style.display = "block" ;
+								}
+								
+							}
+					);
+					
+function init()
+{
+
+	var max = -1;
+	document.body.style.backgroundColor = "#ffffcc";
+    document.body.style.backgroundImage = "url('logor1.png')";
+	document.body.style.backgroundRepeat = "no-repeat";
+	document.body.style.backgroundPosition = "center";
+	
+	
+	if(localStorage.productRecord)
+	{
+		product_arr = JSON.parse(localStorage.productRecord);
+		for(var i=0;i<product_arr.length;i++)
+		{
+			if(product_arr[i].Id>max)
+			{
+				max = product_arr[i].Id;
+			}
+			
+			if(parseInt(product_arr[i].Quantity,10)==0)
+			{
+				var str = product_arr[i].Name + " out of stock";
+				alert(str);
+			}
+			display_on_screen(product_arr[i].Name,product_arr[i].Price,product_arr[i].Quantity,product_arr[i].Discription,product_arr[i].Id,0,-2);
+		}
+		display_input_bar();
+		max++;
+		id_helper = max;
+	}
+	
+}					
+					
+function createProductPanel(flag,required_index)
+{
+
+	if(flag == 1)
+	{
+	    if(h1.style.display === "none")
+		{
+			delete_product_panel();
+		}
+		else
+		{
+			h1.style.display = "none";
+		}
+		
+	}
+	
+	
+    var mdiv = document.getElementById("productPanel1");
+	
+	var big_div = create_div("big_div1");
+	
+	var button_div = create_div("button_div1");
+		
+	var div_name = create_div("div_name1");
+	var div_category = create_div("div_category1");
+	var div_price = create_div("div_price1");
+	var div_qunatity = create_div("div_qunatity1");
+	var div_discription = create_div("div_discription1");
+	var div_detail = create_div("div_detail1");
+	
+	// product Name ---------------
+	var span_name = span_creater("Product Name : ");
+	div_name.appendChild(span_name);
+	div_name.appendChild(input_creater("input_name1"));
+	big_div.appendChild(div_name);   big_div.appendChild(line_break());
+
+	// product Category --------------------------
+	var span_category = span_creater("Product Category : ");
+	div_category.appendChild(span_category);
+	div_category.appendChild(input_creater("input_category1"));
+	big_div.appendChild(div_category);   big_div.appendChild(line_break());
+	
+	//Product Price --------------------------
+	var span_price = span_creater("Price : ");
+	div_price.appendChild(span_price);
+	div_price.appendChild(input_creater("input_price1"));
+	big_div.appendChild(div_price);			big_div.appendChild(line_break());
+	
+	// product Quantity ---------------------
+	var span_qunatity = span_creater("Quantity : ");
+	div_qunatity.appendChild(span_qunatity);
+	div_qunatity.appendChild(input_creater("input_qunatity1"));
+	big_div.appendChild(div_qunatity);			big_div.appendChild(line_break());
+	
+	// Product discription ------------------
+	var span_discription = span_creater("Product Discription : ");
+	div_discription.appendChild(textarea_creater("input_discription1",4,50));
+	big_div.appendChild(span_discription);		big_div.appendChild(line_break());  big_div.appendChild(div_discription);
+	big_div.appendChild(line_break());	
+
+	// Product details ------------------
+	var span_detail = span_creater("Product Details : ");
+	div_detail.appendChild(textarea_creater("input_detail1",6,50));
+	big_div.appendChild(span_detail);		big_div.appendChild(line_break());  big_div.appendChild(div_detail);
+	big_div.appendChild(line_break());	
+
+	//  Cancel button ------------------------------
+	var button_cancel = create_button("button_cancel1","Cancel"); 
+	button_cancel.addEventListener('click',function()
+												{	
+													delete_product_panel();
+													h1.style.display = "block";
+												}
+								   );
+	button_div.appendChild(button_cancel);	
+	
+	// Submit button ---------------------
+	if(flag == 0)
+	{ 
+		var button_submit = create_button("button_submit1","Submit"); 
+		button_submit.addEventListener('click',function()
+												{	
+													Validation(flag,required_index);
+												}
+								   );
+		button_div.appendChild(button_submit);
+	}
+	
+	// Update button --------------------------
+	if(flag == 1)
+	{
+		var button_update = create_button("button_update1","Update");
+		button_update.addEventListener('click',function()
+												{	
+													Validation(flag,required_index);
+												}
+								   );
+		button_div.appendChild(button_update);
+	}	
+							   		
+	
+	big_div.appendChild(button_div);
+	mdiv.appendChild(big_div);
+}		
+
+function delete_product_panel()	
+{
+	delete_all_nodes("button_div1");
+	delete_all_nodes("div_detail1");
+	delete_all_nodes("div_discription1");
+	delete_all_nodes("div_qunatity1");
+	delete_all_nodes("div_price1");
+	delete_all_nodes("div_category1");
+	delete_all_nodes("div_name1");
+	delete_all_nodes("big_div1");
+	
+	var node = document.getElementById("big_div1");
+	node.parentNode.removeChild(node);         // delete current node...........
+
+}	
+
+
+function Validation(indicator,required_index)    // indicator == 0 -->new product  ---- else 1  ---- for modify
+{ 
+	var flage = 0;
+    // Name validation.............
+	var prod_name = document.getElementById("input_name1").value;
+	var check_name1 = cannot_empty(prod_name);
+	if(check_name1 == true)
+	{
+		var check_name2 = contain_character(prod_name);
+	}
+	var div_prod_name = document.getElementById("div_name1");
+	// check last child -----------------
+	var lastchild = div_prod_name.lastChild.nodeName;
+	// delete if it was label ------------------
+	if(lastchild == "LABEL")
+	{
+		div_prod_name.removeChild(div_prod_name.lastChild);
+	}
+	//  if prod_name is empty -------------
+	if(check_name1 == false)
+	{
+		flage = 1;
+		var label_prod_name = label_creater("Product name can't be empty");
+		div_prod_name.appendChild(label_prod_name);
+	}
+	// if product name donot contain any character
+	else if(check_name2 == false)
+	{
+		flage = 1;
+		var label_prod_name = label_creater("Product name must contain one Alphabet");
+		div_prod_name.appendChild(label_prod_name);
+	}
+	
+	 // Category validation.............
+	var prod_category = document.getElementById("input_category1").value;
+	var check_category1 = cannot_empty(prod_category);
+	if(check_category1 == true)
+	{
+		var check_category2 = contain_character(prod_category);
+		if(check_category2 == true)
+		{
+			var check_category3 = contain_digit(prod_category);
+		}
+	}
+	var div_prod_category = document.getElementById("div_category1");
+	// check last child -----------------
+	var lastchild = div_prod_category.lastChild.nodeName;
+	// delete if it was label ------------------
+	if(lastchild == "LABEL")
+	{
+		div_prod_category.removeChild(div_prod_category.lastChild);
+	}
+	//  if prod_category is empty -------------
+	if(check_category1 == false)
+	{
+		flage = 1;
+		var label_prod_category = label_creater("Product category can't be empty");
+		div_prod_category.appendChild(label_prod_category);
+	}
+	// if product category donot contain any character
+	else if(check_category2 == false)
+	{	
+		flage = 1;
+		var label_prod_category = label_creater("Product category must contain Alphabets");
+		div_prod_category.appendChild(label_prod_category);
+	}
+	// if product category contain any digit
+	else if(check_category3 == true)
+	{
+		flage = 1;
+		var label_prod_category = label_creater("Product category can't contain any digit");
+		div_prod_category.appendChild(label_prod_category);
+	}
+	
+	var flage_pr = div_contain_only_digit("input_price1","div_price1","price");
+	var flage_quant = div_contain_only_digit("input_qunatity1","div_qunatity1","quantity");
+
+	var flage_disc = div_cant_empty("input_discription1","div_discription1","discription");
+	var flage_detail  = div_cant_empty("input_detail1","div_detail1","detail");
+	if(flage == 0 && flage_pr == 0 && flage_quant == 0 && flage_disc == 0 && flage_detail == 0)
+	{
+		var prod_name = document.getElementById("input_name1").value;
+		var prod_category = document.getElementById("input_category1").value;
+		var prod_price = document.getElementById("input_price1").value;
+		var prod_quantity = document.getElementById("input_qunatity1").value;
+		var prod_discription = document.getElementById("input_discription1").value;
+		var prod_detail = document.getElementById("input_detail1").value;
+		
+		if(indicator == 0)
+		{
+			var product_obj = create_obj(prod_name,prod_category,prod_price,prod_quantity,prod_discription,prod_detail);
+			clear_text_box_after_picking_value();
+			product_arr.push(product_obj);
+			display_on_screen(prod_name,prod_price,prod_quantity,prod_discription,id_helper,indicator,-2);
+			id_helper++;
+		}
+		
+		if(indicator == 1)
+		{
+			var i;
+			var prev = -1;
+		    var div_product_list = document.getElementById("div_product_list1");
+			var get_child = div_product_list.childNodes;
+			for(i=0;i<get_child.length;i++)
+			{
+				if(get_child[i].getAttribute('id') == product_arr[required_index].Id)
+				{
+					while (get_child[i].firstChild) 
+					{
+						get_child[i].removeChild(get_child[i].firstChild);
+					}
+					get_child[i].parentNode.removeChild(get_child[i]);
+					
+				    break;
+				}
+				prev = get_child[i].getAttribute('id');
+			}
+			if(prev == -1)
+			{
+				insert_in_array(prod_name,prod_category,prod_price,prod_quantity,prod_discription,prod_detail,required_index);
+				display_on_screen(prod_name,prod_price,prod_quantity,prod_discription,product_arr[required_index].Id,indicator,prev)
+				
+			}
+			if(prev>-1)
+			{
+				insert_in_array(prod_name,prod_category,prod_price,prod_quantity,prod_discription,prod_detail,required_index);
+				display_on_screen(prod_name,prod_price,prod_quantity,prod_discription,product_arr[required_index].Id,indicator,prev);
+			}
+			clear_text_box_after_picking_value();
+		}	
+		
+		if(product_arr.length>=1)
+		{
+		     display_input_bar();
+		}
+		
+		add_in_Loal_Storage();
+		if(indicator == 1)
+		{
+			delete_product_panel();
+			h1.style.display = "block";
+		}
+	}
+}
+
+
+function display_on_screen(prod_name,prod_price,prod_quantity,prod_discription,id,indicator,prev)
+{
+	var div = create_div(id);
+	
+	div.appendChild(span_creater("Item: "));
+	div.appendChild(span_creater(prod_name));
+	
+	div.appendChild(line_break());
+	div.appendChild(span_creater("Price: "+prod_price));
+	
+	div.appendChild(line_break());
+	div.appendChild(span_creater("Quantity: "+prod_quantity));
+	
+	div.appendChild(line_break());
+	div.appendChild(span_creater("Discription: "+prod_discription));
+	
+	div.appendChild(line_break());	div.appendChild(line_break()); div.appendChild(line_break());
+			
+	div.addEventListener('click',function()
+								{	
+									about_Buttons(this.id);
+								}
+						);
+									 
+	var mdivp = document.getElementById("div_product_list1");  // mdivp  ---- main div of product
+			
+	if(indicator == 0)               // new product come ..........
+	{
+		mdivp.appendChild(div);
+	}
+	
+	if(indicator == 1 && prev == -1)      // modifying first product ........
+	{
+		mdivp.insertBefore(div,mdivp.firstChild);     //  APPEND AS FIRST CHILD.......
+	}	
+
+	if(indicator == 1 && prev>-1)
+	{
+		var element = document.getElementById(prev);
+		div.appendAfter(element);               // IMPORTANT   TASK......
+	}
+
+}
+
+Element.prototype.appendAfter = function(element) 
+{
+	element.parentNode.insertBefore(this, element.nextSibling);
+}, false;
+
+
+function about_Buttons(id1)
+{
+	var div = document.getElementById(id1);
+	// check last child -----------------
+	var lastchild = div.lastChild.nodeName;
+	// delete if it was BUTTON ------------------
+	if(lastchild == "BUTTON")
+	{
+		div.removeChild(div.lastChild);
+		div.removeChild(div.lastChild);
+	}
+	else
+	{
+		var button_delete = create_button("delete"+id1,"Delete");
+		
+		var button_modify = create_button("modify"+id1,"Modify");
+		
+		div.appendChild(button_delete);
+		div.appendChild(button_modify);
+		
+		button_delete.addEventListener('click',function()
+														{	
+															delete_Product(id1);
+														}
+												);
+		button_modify.addEventListener('click',function()
+														{	
+															modify_Product(id1);
+														}
+												);
+	}							
+}
+
+function delete_Product(id1)
+{
+    var i = get_product_index(id1);
+	product_arr.splice(i,1);
+	
+	 add_in_Loal_Storage();
+	
+	var div = document.getElementById(id1);
+	
+	delete_all_nodes(id1);
+	
+	div.parentNode.removeChild(div);         // delete current node...........
+	
+	if (product_arr.length==0)
+	{
+		     hide_input_bar();        
+	}
+}
+
+function modify_Product(id1)
+{
+	var required_index = get_product_index(id1);
+	var flag=1;                    // for modify set flag=1;
+    createProductPanel(flag,required_index);    
+	set_values_in_panel(required_index);
+}
+
+function display_input_bar()
+{
+	var search_input = document.getElementById("input_search");
+	search_input.style.visibility='visible';
+	
+	// give style to search box....
+	
+	search_input.style.width = "30%";
+	search_input.style.boxSizing="border-box";
+	search_input.style.border = "thick solid #ccc";
+	search_input.style.borderRadius = "5px";
+	search_input.style.fontSize = "20px";
+	search_input.backgroundColor = "white";
+	
+	search_input.style.backgroundImage = "url('search1.jpg')";
+	search_input.style.backgroundSize = "30px 20px";
+	search_input.style.backgroundRepeat = "no-repeat";
+	search_input.style.padding = "5px 5px 5px 50px"
+	search_input.style.backgroundPosition = "10px 10px";
+	
+		
+	search_input.addEventListener("keyup", function(event)
+                            {
+								search_products(event);
+							}
+					);
+}
+
+function hide_input_bar()
+{
+	var search_input = document.getElementById("input_search");
+	search_input.style.visibility='hidden';
+}
+
+function search_products(event)
+{
+	var input_value = event.target.value.toLowerCase();
+	var product_list = document.getElementById("div_product_list1");
+	var child_nodes = product_list.childNodes;
+			for(var i=0;i<child_nodes.length;i++)
+			{
+				var div = product_list.getElementsByTagName('div')[i];
+				var req_span = div.getElementsByTagName('span')[1];
+				var product_name = req_span.innerText;
+				
+				if(product_name.toLowerCase().indexOf(input_value) > -1)
+				{
+					child_nodes[i].style.display = "";
+				}
+				else
+				{
+					child_nodes[i].style.display = "none";
+				}
+			}
+}
+
+function add_in_Loal_Storage()
+{ 
+	//localStorage.clear();
+	
+	localStorage.productRecord = JSON.stringify(product_arr);
+}
+
+
+
+function cannot_empty(str)
+{
+	var flag = 0;
+	for(var i = 0;i<str.length;i++)
+	{
+		if(str.charCodeAt(i) == 32)  // space
+		{
+			
+		}
+		else
+		{
+			flag = 1;
+			break;
+		}
+	}
+	if(flag == 0)
+	return false;
+	else
+	return true;
+}
+
+function contain_character(str)
+{
+	var flag = 0;
+	for(var i = 0;i<str.length;i++)
+	{
+		if((str.charCodeAt(i)>=65 && str.charCodeAt(i)<=90) || (str.charCodeAt(i)>=97 && str.charCodeAt(i)<=122) ) 
+		{
+			flag = 1;
+			break;
+		}
+		else
+		{
+			
+		}
+	}
+	if(flag == 0)
+	return false;
+	else
+	return true;
+}
+
+function contain_digit(str)
+{
+	var flag = 0;
+	for(var i = 0;i<str.length;i++)
+	{
+		if((str.charCodeAt(i)>=48 && str.charCodeAt(i)<=57)) 
+		{
+			flag = 1;
+			break;
+		}
+		else
+		{
+			
+		}
+	}
+	if(flag == 0)
+	return false;
+	else
+	return true;
+}
+
+function allnumeric(inputtxt)
+{    
+	var numbers = /^[0-9]+$/;
+	if(inputtxt.match(numbers))
+    {
+      return true;
+    }
+    else
+    {
+		return false;
+    }
+} 
+
+function create_obj(prod_name,prod_category,prod_price,prod_quantity,prod_discription,prod_detail)
+{
+	var product_obj =
+	{
+		Name: prod_name,
+		Category:prod_category,
+		Price: prod_price,
+		Quantity: prod_quantity,
+		Discription: prod_discription,
+		Detail: prod_detail,
+		Id:id_helper 
+	};
+	return product_obj;
+}
+
+function insert_in_array(prod_name,prod_category,prod_price,prod_quantity,prod_discription,prod_detail,index)
+{
+	product_arr[index].Name = prod_name;
+	product_arr[index].Category = prod_category;
+	product_arr[index].Price = prod_price;
+	product_arr[index].Quantity = prod_quantity;
+	product_arr[index].Discription = prod_discription;
+	product_arr[index].Detail = prod_detail;
+}
+
+function delete_all_nodes(id)
+{
+	var node = document.getElementById(id);
+	while (node.firstChild) 
+	{
+		node.removeChild(node.firstChild);
+	}
+}
+
+function span_creater(msg)
+{
+	var span = document.createElement('span');
+	var txt = document.createTextNode(msg);
+	span.appendChild(txt);
+	return span;
+}
+
+function input_creater(id)
+{
+	var input = document.createElement("input"); 
+	input.setAttribute('type',"text"); 
+	input.setAttribute("id",id);
+	return input;
+}
+
+function textarea_creater(id,r,c)
+{
+	var textArea = document.createElement("textarea");
+	textArea.setAttribute("id",id);
+	textArea.setAttribute('rows',r);
+	textArea.setAttribute('cols',c);
+	return textArea;
+}
+
+function create_button(id,text)
+{
+	var button = document.createElement("Button");
+	var  button_text = document.createTextNode(text);
+	button.appendChild(button_text);
+	button.setAttribute("id",id);
+	button.style.backgroundColor = "orange";
+	return button;
+}
+
+function create_div(id)
+{
+	var div = document.createElement("div"); 
+	div.setAttribute("id",id);
+	return div;
+}
+
+function line_break()
+{
+	var br = document.createElement('br');
+	return br;
+}
+
+function label_creater(msg)
+{
+	var label = document.createElement("label");
+	var txt = document.createTextNode(msg);
+	label.appendChild(txt);
+	label.style.color = "red";
+	return label;
+}
+
+function get_product_index(id1)
+{
+	for(var i=0; i<product_arr.length; i++)
+	{
+		if(product_arr[i].Id == id1)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+function div_contain_only_digit(input_id,div_id,msg)
+{
+	var str = document.getElementById(input_id).value;
+	str = str.replace(/^\s+|\s+$/gm,'')
+	var check_str1 = cannot_empty(str);
+	if(check_str1 == true)
+	{
+		var check_str2 = allnumeric(str);
+	}
+	var div = document.getElementById(div_id);
+	// check last child -----------------
+	var lastchild = div.lastChild.nodeName;
+	// delete if it was label ------------------
+	if(lastchild == "LABEL")
+	{
+		div.removeChild(div.lastChild);
+	}
+	//  if str is empty -------------
+	if(check_str1 == false)
+	{
+		var label = label_creater("Product "+ msg +" can't be empty");
+		div.appendChild(label);
+		return 1;
+	}
+	// if str could contain only digits............
+	else if(check_str2 == false)
+	{
+		var label = label_creater("Product "+msg+" could contain only digits");
+		div.appendChild(label);
+		return 1;
+	}
+	return 0;
+}
+
+function div_cant_empty(input_id,div_id,msg)
+{
+	var str = document.getElementById(input_id).value;
+	var check_str1 = cannot_empty(str);
+	
+	var div = document.getElementById(div_id);
+	// check last child -----------------
+	var lastchild = div.lastChild.nodeName;
+	// delete if it was label ------------------
+	if(lastchild == "LABEL")
+	{
+		div.removeChild(div.lastChild);
+	}
+	//  if str is empty -------------
+	if(check_str1 == false)
+	{
+		var label = label_creater("Product "+ msg +" can't be empty");
+		div.appendChild(label);
+		return 1;
+	}
+	return 0;
+}
+
+function clear_text_box_after_picking_value()
+{
+	var get_name = document.getElementById("input_name1");
+	get_name.value="";
+			
+	var get_discription = document.getElementById("input_discription1");
+	get_discription.value="";
+			
+	var get_price = document.getElementById("input_price1");
+	get_price.value="";
+			
+	var get_qunatity = document.getElementById("input_qunatity1");
+	get_qunatity.value="";
+	
+	var get_category = document.getElementById("input_category1");
+	get_category.value="";
+	
+	var get_detail = document.getElementById("input_detail1");
+	get_detail.value="";
+}
+
+function set_values_in_panel(required_index)
+{
+	var set_name = document.getElementById("input_name1");
+	set_name.value = product_arr[required_index].Name;
+
+	var set_discription = document.getElementById("input_discription1");
+	set_discription.value = product_arr[required_index].Discription;
+	
+	var set_price = document.getElementById("input_price1");
+	set_price.value = product_arr[required_index].Price;
+	
+	var set_qunatity = document.getElementById("input_qunatity1");
+	set_qunatity.value = product_arr[required_index].Quantity;
+	
+	var set_category = document.getElementById("input_category1");
+	set_category.value = product_arr[required_index].Category;
+	
+	var set_detail = document.getElementById("input_detail1");
+	set_detail.value = product_arr[required_index].Detail;
+}
+</script>		  
+</body>
+</html>

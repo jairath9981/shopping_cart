@@ -1,0 +1,320 @@
+<html>
+<head>
+<style>
+#div_login1
+{
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 3px;
+}
+</style>
+</head>
+<body>
+<div style="padding:15px 0px 0px 655px;"> <img src="logo.png"  style="width: 96px; height: 18%;"></div>
+<div id ="div_login1"> </div>
+<script>
+var cust = [];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{
+	retrieve_from_local_storage();
+	create_logIn_page();
+}
+
+function retrieve_from_local_storage()
+{
+	if(localStorage.customerRecord)
+	{
+		cust = JSON.parse(localStorage.customerRecord);
+	}
+}
+
+function create_logIn_page()
+{
+	var div = document.getElementById("div_login1");
+	
+	var big_div = document.createElement("div");
+	big_div.setAttribute("id", "big_div1");
+	
+	var br1 = document.createElement('br'); 
+	var br2 = document.createElement('br'); 
+	
+	var div_email = create_panel_helper("Email : ","div_email1","input_email1","text");
+	var div_pass = create_panel_helper("Password : ","div_pass1","input_pass1","password");
+	
+	var button = document.createElement("Button");
+	button.setAttribute("id", "submit1");
+	var  button_text = document.createTextNode("Submit");
+	button.appendChild(button_text);
+	button.addEventListener('click',function()
+												{	
+													Validation();
+												}
+								   );
+	
+
+	big_div.appendChild(div_email);
+	big_div.appendChild(br1);
+	big_div.appendChild(div_pass);
+	big_div.appendChild(br2);
+	big_div.appendChild(button);
+	
+	div.appendChild(big_div); 
+}
+
+function create_panel_helper(str,id1,id2,type)
+{
+    var div = document.createElement("div");
+	div.setAttribute("id", id1);
+	
+	var span = document.createElement('span');
+	var text = document.createTextNode(str);
+	
+	span.appendChild(text);
+	div.appendChild(span);
+	
+	var line_break = document.createElement('br');
+	div.appendChild(line_break);
+	
+	var input = document.createElement("input"); 
+	input.setAttribute('type',type); 
+	input.setAttribute("id", id2);
+	div.appendChild(input);
+	
+	return div;
+}
+
+function Validation()
+{
+
+	var email = document.getElementById("input_email1").value;
+	var check_email = isEmailValid(email);
+	
+	var password = document.getElementById("input_pass1").value;
+	var check_passw = isPasswordValid(password);
+	
+	if(check_email == true && check_passw == true)
+	{
+		check_in_array(email,password);
+	}
+
+}
+
+function isEmailValid(email)
+{
+	var div = document.getElementById("div_email1")
+	delete_last_label(div);
+	var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+	if(email.match(mailformat))
+	{
+		return true;
+	}
+	var label = label_creater("Invalid email");
+	div.appendChild(label);
+	return (false)
+}
+
+function isPasswordValid(pass)
+{
+	var len = pass.length;
+	var flag_length = 0;
+	var flag_capital = 0;
+	var flag_lower = 0;
+	var flag_number = 0;
+	var div = document.getElementById("div_pass1")
+	delete_last_label(div);
+	if(len>=8)
+	{
+		flag_length = 1;
+	}
+	else
+	{
+		var label = label_creater("Password must contain 8 characters");
+		div.appendChild(label);
+		return false;
+	}
+	for(var i=0;i<len;i++)
+	{
+		if(pass.charCodeAt(i)>=65 && pass.charCodeAt(i)<=90)
+		{
+			flag_capital = 1;
+		}
+		
+		if(pass.charCodeAt(i)>=97 && pass.charCodeAt(i)<=122)
+		{
+			flag_lower = 1;
+		}
+		
+		if(pass.charCodeAt(i)>=48 && pass.charCodeAt(i)<=57)
+		{
+			flag_number = 1;
+		}
+		
+		if(flag_capital == 1 && flag_lower == 1 && flag_number == 1)
+		{
+			return true;
+		}
+		
+	}
+	if(flag_capital == 0)
+	{
+		var label = label_creater("Password must contain atleast one upper case character");
+		div.appendChild(label);
+		return false;
+	}
+	if(flag_lower == 0)
+	{
+		var label = label_creater("Password must contain atleast one lower case character");
+		div.appendChild(label);
+		return false;
+	}
+	if(flag_number == 0)
+	{
+		var label = label_creater("Password must contain atleast one numeric value");
+		div.appendChild(label);
+		return false;
+	}
+	
+}
+
+function label_creater(str)
+{
+	var label = document.createElement("label");
+	var mssg = document.createTextNode(str);
+	label.appendChild(mssg);
+	label.style.color = "red";
+	return label;
+}
+
+function check_in_array(email,password)
+{
+    var flage = 0;
+	var flagp = 0;
+	for(var i = 0 ;i<cust.length;i++)
+	{
+		if(cust[i].Email == email)
+		{
+			flage = 1;
+		}
+		if(cust[i].Email == email && cust[i].Password == password)
+		{
+			flagp = 1;
+		   if(cust[i].Status == -1)
+		   {
+				alert("This is your one time OTP "+cust[i].OTP);
+				create_OTP_Panel(i);
+
+		   }
+		   else if(cust[i].Status == 1)
+		   {
+				localStorage.currentUser = JSON.stringify(cust[i].Email);
+				window.location = 'cart.html';
+		   }
+		   break;
+		}
+	}
+	if(flage == 0)
+	{
+		alert("This account is not registered");
+	}
+	
+	if(flagp == 0 && flage == 1)
+	{
+		alert("INCORRECT PASSWORD");
+	}
+}
+
+function create_OTP_Panel(i)
+{
+	delete_login_panel();
+	
+	var div = document.getElementById("div_login1");
+	var br1 = document.createElement('br'); 
+	
+	var big_div = document.createElement("div");
+	big_div.setAttribute("id", "big_div1");
+	
+	var div_OTP = create_panel_helper("Enter your OTP : ","div_OTP1","input_OTP1");
+	
+	var button = document.createElement("Button");
+	button.setAttribute("id", "submit2");
+	var  button_text = document.createTextNode("Submit");
+	button.appendChild(button_text);
+	button.addEventListener('click',function()
+												{	
+													Validation_OTP(i);	
+												}
+								   );
+								   
+	big_div.appendChild(div_OTP);
+	big_div.appendChild(br1);
+	big_div.appendChild(button);
+	div.appendChild(big_div); 
+}
+
+function delete_login_panel()
+{
+	var div_password = document.getElementById("div_email1");
+    delete_all_its_child(div_password);
+	
+	var div_mail = document.getElementById("div_pass1");
+	delete_all_its_child(div_mail);
+	
+	var div_big = document.getElementById("big_div1");
+	delete_all_its_child(div_big);
+	
+	div_big.parentNode.removeChild(div_big);
+}
+
+function delete_all_its_child(node)
+{
+	while (node.firstChild) 
+	{
+		node.removeChild(node.firstChild);
+	}
+}
+
+function Validation_OTP(i)
+{
+	var otp = document.getElementById("input_OTP1").value;
+	if(cust[i].OTP == otp)
+	{	
+		cust[i].Status = 1;
+		add_in_local_storage();
+		localStorage.currentUser = JSON.stringify(cust[i].Email);
+		window.location = 'cart.html';
+	}
+	else
+	{
+		alert("OTP is incorrect");
+		location.reload();
+	}
+}
+
+function add_in_local_storage()
+{
+	localStorage.customerRecord = JSON.stringify(cust);
+}
+
+
+function delete_last_label(node)
+{
+	var element = node.lastChild.nodeName;
+	if(element == "LABEL")
+	{
+		node.removeChild(node.lastChild);
+	}
+}
+
+</script>
+</body>
+</html>

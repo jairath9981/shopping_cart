@@ -1,0 +1,287 @@
+<html>
+<body>
+<div > <img src="logo.png"  style="width: 96px; height: 18%;"></div><br/>
+<h3>Delivey Information</h3>
+<div id ="div_person details1"> </div>
+<script>
+var delivery_info = [];
+var email_id = JSON.parse(localStorage.currentUser);
+	
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+function init()
+{
+   // localStorage.removeItem("deliveryRecord");
+	retrive_from_local_storage();
+	var div = document.getElementById("div_person details1");
+	
+	var big_div = document.createElement("div");
+	big_div.setAttribute("id", "big_div1");
+	
+	var br1 = document.createElement('br'); 
+	var br2 = document.createElement('br'); 
+	var br3 = document.createElement('br'); 
+	var br4 = document.createElement('br'); 
+	var br5 = document.createElement('br');
+	
+	var div_name = create_panel_helper("Full name","div_name1","input_name1","text");
+	var div_mobile = create_panel_helper("Mobile number","div_mobile1","input_mobile1","text");
+	var div_pin = create_panel_helper("Pincode","div_pin1","input_pin1","text");
+	var div_address = create_panel_helper("Flat, House no, Building, Company, Apartment: ","div_address1","input_address1","text");
+	var div_town = create_panel_helper("Town/City","div_town1","input_town1","text");
+	
+	var button = document.createElement("Button");
+	var but_text = document.createTextNode("Deliver to this address");
+	button.appendChild(but_text);
+	button.style.backgroundColor="orange";
+	
+	button.addEventListener('click',function()
+												{	
+													Must_fill();
+												}
+								   );
+	
+	big_div.appendChild(div_name);  
+	big_div.appendChild(br1);
+	big_div.appendChild(div_mobile);
+	big_div.appendChild(br2);
+	big_div.appendChild(div_pin);
+	big_div.appendChild(br3);
+	big_div.appendChild(div_address);
+	big_div.appendChild(br4);
+	big_div.appendChild(div_town);
+	big_div.appendChild(br5);
+	big_div.appendChild(button);
+	
+	div.appendChild(big_div);
+	try_to_fill();
+	
+}	
+
+function create_panel_helper(placeholder,div_id,input_id,type)
+{
+	var div = document.createElement("div");
+	div.setAttribute("id",div_id);
+	
+	var input = document.createElement("input"); 
+	input.setAttribute('type',type); 
+	input.setAttribute("id",input_id);
+	input.placeholder = placeholder;
+	div.appendChild(input);
+	
+	return div;
+}
+
+function Must_fill()
+{
+	var name = document.getElementById("input_name1").value;
+	var check_name = check(name,"div_name1");
+	
+	var mobile = document.getElementById("input_mobile1").value;
+	var check_mobile = phonenumber(mobile,"div_mobile1");
+	
+	var pin = document.getElementById("input_pin1").value;
+	var check_pin = pinCode(pin,"div_pin1");
+	
+	var house = document.getElementById("input_address1").value;
+	var check_house = check(house,"div_address1");
+	
+	var town = document.getElementById("input_town1").value;
+	var check_town = check(town,"div_town1");
+	
+	if(check_name == true && check_mobile == true  && check_pin == true && check_house == true && check_town == true)
+	{
+		var check_delivery_info = already_present(name,mobile,pin,house,town)
+		if(check_delivery_info==-1)  // new detail...........
+		{
+			var obj = create_obj(name,mobile,pin,house,town);
+			delivery_info.push(obj);
+			add_in_local_storage();
+			window.location = "check delivery order.html";
+		}
+		else if(check_delivery_info>=0)  // update details..........
+		{
+			var obj = create_obj(name,mobile,pin,house,town);
+			delivery_info[check_delivery_info] = obj;
+			add_in_local_storage();
+			window.location = "check delivery order.html";
+		}
+		else
+		{
+			window.location = "check delivery order.html";
+		}
+	}
+	
+}
+
+function check(str,div_id)
+{
+	var flagc = 0;
+	var div = document.getElementById(div_id);
+	delete_last_label(div);
+	if(str.length == 0)
+	{
+		var label = label_creater("Can't be empty");
+		div.appendChild(label);
+		return false;
+	}
+	else
+	{
+		for(var i = 0;i<str.length;i++)
+		{
+			if(str.charCodeAt(i)==32)
+			{
+			
+			}
+			else
+			{
+				flagc = 1;
+				break;
+			}
+		}
+		if(flagc == 1)
+		{
+			return true;
+		}
+		else
+		{
+			var label = label_creater("Can't be empty");
+			div.appendChild(label);
+			return flase;
+		}
+	}
+}
+
+function phonenumber(mobile,div_id)
+{
+  var phoneno = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+  var div = document.getElementById(div_id);
+  delete_last_label(div);
+  if(mobile.match(phoneno))
+    {
+	   return true;
+	}
+   else
+    {
+	   var label = label_creater("Invalid mobile number");
+	   div.appendChild(label);
+	   return false;
+    }
+}
+
+function pinCode(pin,div_id)
+{
+	var pinno = /(^\d{6}$)/;
+	var div = document.getElementById(div_id);
+	delete_last_label(div);
+	if(pin.match(pinno))
+    {
+	   return true;
+	}
+   else
+    {
+	   var label = label_creater("Invalid Pincode");
+	   div.appendChild(label);
+	   return false;
+    }
+}
+
+function label_creater(str)
+{
+	var label = document.createElement("label");
+	var mssg = document.createTextNode(str);
+	label.appendChild(mssg);
+	return label;
+}
+
+function delete_last_label(node)
+{
+	var element = node.lastChild.nodeName;
+	if(element == "LABEL")
+	{
+		node.removeChild(node.lastChild);
+	}
+}
+
+function create_obj(name,mobile,pin,house,town)
+{
+	var obj = {
+		Email:email_id,
+		Name:name,
+		Mobile:mobile,
+		Pin:pin,
+		Address:house,
+		Town:town
+	};
+	return obj;
+}
+
+function retrive_from_local_storage()
+{
+	if(localStorage.deliveryRecord)
+	{
+		delivery_info = JSON.parse(localStorage.deliveryRecord);
+	}
+}
+
+function add_in_local_storage()
+{
+	localStorage.deliveryRecord = JSON.stringify(delivery_info);
+}
+
+function already_present(name,mobile,pin,house,town)
+{
+	for(var i=0;i<delivery_info.length;i++)
+	{
+		if(email_id == delivery_info[i].Email)
+		{
+		   if(name == delivery_info[i].Name && mobile == delivery_info[i].Mobile && pin == delivery_info[i].Pin  && house == delivery_info[i].Address && town == delivery_info[i].Town)
+		   {
+				return -3;
+		   }
+		   else
+		   {
+				return i;
+		   }
+		}
+	}
+	return -1;
+}
+
+function try_to_fill()
+{
+	var index = find();
+	if(index!=-1)
+	{
+		var name = document.getElementById("input_name1");
+		name.value = delivery_info[index].Name;
+		
+		var mobile = document.getElementById("input_mobile1");
+		mobile.value = delivery_info[index].Mobile;
+		
+		var pin = document.getElementById("input_pin1");
+		pin.value = delivery_info[index].Pin;
+		
+		var house = document.getElementById("input_address1");
+		house.value = delivery_info[index].Address;
+		
+		var town = document.getElementById("input_town1");
+		town.value = delivery_info[index].Town;
+	
+	}
+}
+
+function find()
+{
+	for(var i=0;i<delivery_info.length;i++)
+	{
+		if(email_id == delivery_info[i].Email)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+</script>
+</body>
+</html>

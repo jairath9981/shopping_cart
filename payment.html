@@ -1,0 +1,129 @@
+<html>
+
+<body>
+<div id="pm1"></div>
+<script>
+
+var mdiv = document.getElementById("pm1");
+var pay_mode = ["Pay on Delivery (POD)"];        // only insert here................for future purpose...........
+                                            // write now only one payment mode otherwise store seleted payment mode in session storage......
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{	
+	var img = document.createElement('img');
+	img.src = 'logo.png';
+	img.style.width = "96px";
+	img.style.height = "18%";
+	
+	var span = document.createElement('span');
+	var txt = document.createTextNode('Select a payment method');
+	span.appendChild(txt);
+	
+	mdiv.appendChild(img);
+	mdiv.appendChild(line_break());
+	mdiv.appendChild(span);
+	mdiv.appendChild(line_break());  mdiv.appendChild(line_break());  mdiv.appendChild(line_break());
+	
+	
+	payment_mode();
+	
+	var div2 = document.createElement('div');
+	var button = create_button("c1","Continue");
+	
+	button.addEventListener('click',function()
+									{
+										check_move();
+									}
+						   );
+	
+						  
+	div2.appendChild(button);
+	
+	div2.style.float = "right";
+	
+	mdiv.appendChild(div2);
+	
+}
+
+function payment_mode()
+{
+	for(var i =0;i<pay_mode.length;i++)
+	{
+		display_helper(pay_mode[i],i);
+	}
+}
+
+function display_helper(mode,i)
+{
+	var div = document.createElement('div');
+	
+	div.appendChild(radio_input("sendType",mode,i));
+	
+	mdiv.appendChild(div);
+}
+
+function radio_input(name,text,id)
+{
+	var label = document.createElement("label");
+    var radio = document.createElement("input");
+	radio.setAttribute("id",id);
+    radio.type = "radio";
+    radio.name = name;
+    //radio.value = value;
+
+    label.appendChild(radio);
+
+    label.appendChild(document.createTextNode(text));
+	
+	if(id == 0)
+	{
+		radio.checked = true;
+	}
+    return label;
+}
+
+function line_break()
+{
+	var br = document.createElement('br');
+	return br;
+}
+
+function create_button(id,text)
+{
+	var button_id = text+id;
+	var button = document.createElement("Button");
+	var  button_text = document.createTextNode(text);
+	button.appendChild(button_text);
+	button.setAttribute("id",button_id);
+	button.style.backgroundColor = "orange";
+	return button;
+}
+
+function check_move()
+{
+	var flag = 0;
+	
+	for(var i=0;i<pay_mode.length;i++)
+	{
+		if (document.getElementById(i).checked == true) 
+		{
+			flag = 1;
+			break;
+		}
+	}
+	
+	if(flag == 0)
+	{
+		alert("Please select atleat one payment method !!!");
+	}
+	else
+	{
+		window.location = 'review your order.html';
+	}
+}
+</script>
+</body>
+</html>

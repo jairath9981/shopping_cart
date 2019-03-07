@@ -1,0 +1,150 @@
+<html>
+<body>
+<div id="wish1"></div>
+<script>
+
+var email_id = JSON.parse(localStorage.currentUser);
+var mdiv = document.getElementById("wish1");
+
+var cart_arr = [];
+var wish_arr = [];
+var product_arr = [];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{
+	take();
+	var div = create_div("heading");
+	show_heading(div);
+	show_products();
+}
+function take()
+{
+	if(localStorage.cartRecord)      
+	{
+		cart_arr = JSON.parse(localStorage.cartRecord);
+	}
+	if(localStorage.wishRecord)      
+	{
+		wish_arr = JSON.parse(localStorage.wishRecord);
+	}
+	if(localStorage.productRecord)      
+	{
+		product_arr = JSON.parse(localStorage.productRecord);
+	}
+}
+function show_heading(div)
+{
+	
+	var msg = "";
+	if(wish_arr.length>1)
+	{
+		msg = "Saved for later/Wish List ( "+wish_arr.length+" items)";
+		div.appendChild(span_creater(msg));
+		mdiv.appendChild(div);
+		return 1;
+	}
+	else if(wish_arr.length == 1)
+	{
+		msg = "Saved for later/Wish List ( "+wish_arr.length+" item)";
+		div.appendChild(span_creater(msg));
+		mdiv.appendChild(div);
+		return 1;
+	}
+	else
+	return 0;
+}
+function create_div(id)
+{
+	var div = document.createElement('div');
+	div.setAttribute('id',id);
+	return div;
+}
+
+function span_creater(msg)
+{
+	var span = document.createElement('span');
+	var txt = document.createTextNode(msg);
+	span.appendChild(txt);
+	return span;
+}
+
+function show_products()
+{
+	for(var i=0;i<wish_arr.length;i++)
+	{
+		show_product_helper(wish_arr[i].Id_wish,i);
+	}
+}
+
+function show_product_helper(id,index)
+{
+	var div = create_div("wish_product"+id);
+	div.appendChild(span_creater(wish_arr[index].Name));
+	div.appendChild(line_break());
+	
+	var prod_index = check_product_index(wish_arr[index].Id_product);
+	var res = check_product_quant(prod_index);
+	if(res == 1)
+	{
+		div.appendChild(span_creater("In stock"));
+	}
+	else
+	{
+		div.appendChild(span_creater("Out of stock"));
+	}
+	
+	div.appendChild(line_break());
+	
+	var delete_button = create_button("Delete","delete"+id);
+	div.appendChild(delete_button);
+	
+	if(res == 1)
+	{
+		var add_to_cart_button = create_button("Add to cart","add_to_cart"+id);
+		div.appendChild(add_to_cart_button);
+	}
+	
+	div.style.marginTop = "6px";
+	mdiv.appendChild(div);
+}
+
+function check_product_index(id)    // id of product...
+{
+	for(var i = 0;i<product_arr.length;i++)
+	{
+		if(product_arr[i].Id == id)
+		{
+			return i;
+		}
+	}
+}
+
+function check_product_quant(index)  // product index
+{
+	if(product_arr[index].Quantity>0)
+	return 1;
+	else
+	return 0;
+}
+
+function line_break()
+{
+	var br = document.createElement('br');
+	return br;
+}
+
+function create_button(msg,id)
+{
+	var button = document.createElement('button');
+	var txt = document.createTextNode(msg);
+	button.appendChild(txt);
+	button.setAttribute('id',id);
+	button.style.backgroundColor = "orange";
+	return button;
+}
+</script>
+</body>
+</html>

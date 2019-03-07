@@ -1,0 +1,360 @@
+<html>
+
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+
+body 
+{
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+input[type="text"] 
+{
+    display: block;
+    margin : 0 auto;
+}
+
+.topnav 
+{
+  overflow: hidden;
+  background-color: #333;
+}
+
+.topnav a 
+{
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 0px 51px 0px 59px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.topnav a:hover 
+{
+  background-color: #ddd;
+  color: black;
+}
+
+.topnav a.active 
+{
+  background-color: #4CAF50;
+  color: white;
+}
+
+</style>
+</head>
+
+<body>
+<div class = "topnav"></div>
+<div id="yo1"></div>
+<script>
+
+var mdiv = document.getElementById("yo1");
+
+var delivery_arr = [];
+var orderHeader = [];
+var orderFooter = [];
+
+var email_id = JSON.parse(localStorage.currentUser);
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{
+	take();
+	
+	add_style();
+	header_div();
+	
+	show_products();
+}
+
+function take()
+{
+	if(localStorage.deliveryRecord)
+	{
+		delivery_arr = JSON.parse(localStorage.deliveryRecord);
+	}
+	
+	if(localStorage.OrderHeaderRecord)
+	{
+		orderHeader = JSON.parse(localStorage.OrderHeaderRecord);
+	}
+	
+	if(localStorage.OrderFooterRecord)
+	{
+		orderFooter = JSON.parse(localStorage.OrderFooterRecord);
+	}
+}
+
+function header_div()
+{	
+	var div = document.createElement('div');
+	
+	div.appendChild(span_creater("Your Account › Your Orders"));
+	div.appendChild(line_break());  div.appendChild(line_break());  div.appendChild(line_break());
+	
+	var span_order = span_creater("Your Orders");
+	span_order.style.fontSize = "xx-large";
+	div.appendChild(span_order);
+	div.appendChild(line_break());  	div.appendChild(line_break()); 	
+	
+	var span_order2 = span_creater("Orders");
+	
+	div.appendChild(span_order2);
+	div.appendChild(line_break());  div.appendChild(line_break()); div.appendChild(line_break());
+	
+	div.style.margin = "2%";
+	
+	mdiv.appendChild(div);
+}
+
+function show_products()
+{
+	var flag = 0;
+	for(var i = 0;i<orderHeader.length;i++)
+	{
+		if(orderHeader[i].Email_id == email_id)
+		{
+			var flag = 1;
+			var price = orderHeader[i].Total;
+			var name = orderHeader[i].Name;
+			var id = orderHeader[i].Order_id;
+			order_header_div(price,name,id);
+			for(var j = 0;j<orderFooter.length;j++)
+			{
+				if(orderFooter[j].Order_id == orderHeader[i].Order_id)
+				{
+					var pr = orderFooter[j].Product_price;
+					var pr_name = orderFooter[j].Product_name;
+					var quant = orderFooter[j].Product_quantity;
+					order_footer_div(orderHeader[i].Status,orderHeader[i].Order_date,pr,pr_name,quant);
+				}
+			}
+			mdiv.appendChild(line_break());
+		}
+	}
+	if(flag == 0)
+	{
+		not_placed();
+	}
+}
+
+function order_header_div(pr,name,id)
+{
+	var div = document.createElement('div');
+	
+	var div_pr = document.createElement('div');
+	var div_name = document.createElement('div');
+	var div_id = document.createElement('div');
+	
+	div_pr.appendChild(span_creater("Total"));
+	div_pr.appendChild(line_break());
+	div_pr.appendChild(span_creater("₹"+pr));
+	
+	div_pr.style.display = 'inline-table';
+	div_pr.style.marginRight = '5%';
+	
+	div_name.appendChild(span_creater("Ship To"));
+	div_name.appendChild(line_break());
+	div_name.appendChild(span_creater(name));
+	
+	div_name.style.display = 'inline-table';
+	div_name.style.marginRight = '55%';
+	
+	div_id.appendChild(span_creater("ORDER: "+id));
+	div_id.appendChild(line_break());
+	
+	div_id.style.display = 'inline-table';
+	div_id.style.marginRight = '5%';
+	
+	div.appendChild(div_pr);
+	div.appendChild(div_name);
+	div.appendChild(div_id);
+	
+	div.style.width = "80%";
+	div.style.marginLeft = "2%";
+	div.style.border = "thin solid gray";
+	div.style.backgroundColor = "Gainsboro ";
+	
+	
+	mdiv.appendChild(div);
+}
+
+function order_footer_div(status,date,price,pr_name,quant)
+{
+	var div = document.createElement('div');
+	
+	var span_status = span_creater(status+" "+date);
+	span_status.style.fontSize = "large";
+	
+	div.appendChild(span_status);
+	div.appendChild(line_break());
+	
+	var span_product = span_creater("Item: "+pr_name);
+	
+	div.appendChild(span_product);
+	div.appendChild(line_break());
+	
+	var span_price = span_creater("₹"+price+"/ ");
+	span_price.style.color = "red";
+	
+	div.appendChild(span_price);
+	
+	var span_quant = span_creater("- Quantity: "+quant);
+	
+	div.appendChild(span_quant);
+	div.appendChild(line_break());  div.appendChild(line_break()); 
+	
+	div.style.width = "80%";
+	div.style.marginLeft = "2%";
+	div.style.border = "thin solid Gainsboro";
+	div.style.backgroundColor = "FloralWhite ";
+	
+	mdiv.appendChild(div);
+}
+
+function not_placed()
+{
+	var div = document.createElement('div');
+	
+	var span_not_placed = span_creater("You have not placed any orders yet ");
+	
+	div.appendChild(span_not_placed);
+	div.appendChild(line_break());
+	
+	div.style.margin = "2%";
+	
+	mdiv.appendChild(div);
+}
+function span_creater(msg)
+{
+	var span = document.createElement('span');
+	var txt = document.createTextNode(msg);
+	span.appendChild(txt);
+	return span;
+}
+
+function line_break()
+{
+	var br = document.createElement('br');
+	return br;
+}
+
+
+function add_style()
+{
+
+	var div = document.getElementsByClassName("topnav");
+	
+    var div2 = document.createElement("div");
+	
+	var input = document.createElement("input");
+	input.setAttribute('type',"text"); 
+	input.style.height="30px";
+	input.style.fontSize="30pt";
+	
+	var br1 = document.createElement("br");
+	var br2 = document.createElement("br");
+	
+	var div3 = document.createElement("div");
+	
+	var span_name = document.createElement('span');
+	var span_address = document.createElement('span');
+	
+	index = get_index();
+    if(index!=-1)
+	{
+		var str_name = "Deliver to "+delivery_arr[index].Name;
+		var str_address = delivery_arr[index].Town+" "+delivery_arr[index].Pin;
+		
+		var text_name = document.createTextNode(str_name);
+		var text_address = document.createTextNode(str_address);
+		
+		span_name.appendChild(text_name);
+		span_address.appendChild(text_address);
+		
+		div3.appendChild(span_name);
+		div3.appendChild(br2);
+		div3.appendChild(span_address);
+		div3.style.color = 'white';
+		div3.style.display = 'inline-block';
+	}
+	var div4 = document.createElement("div");
+	
+	var a2Tag = create_anchor("cart.html","Home");
+	
+	var a3Tag = create_anchor("javascript:void(0)","Shop by Category");
+	
+	var a4Tag = create_anchor("javascript:void(0)","Your Orders");
+	
+	var a5Tag = create_anchor("javascript:void(0)","Wish list");  
+
+	var a6Tag = create_anchor("javascript:void(0)","Your Account");
+	
+	var a7Tag = create_anchor("javascript:void(0)","Settings");
+	
+    var div5 = document.createElement("div");
+	
+	var img = document.createElement("img"); 
+	img.src = 'cart logo1.jpg';  
+	img.width = "40";
+	img.height = "30";
+	div5.appendChild(img);
+	div5.style.display = 'inline-block';
+	
+	div5.addEventListener("click",function()
+								  {
+										open_page();
+								  }
+						 );
+	
+	div4.appendChild(a2Tag);
+	div4.appendChild(a3Tag);
+	div4.appendChild(a4Tag);
+	div4.appendChild(a5Tag);
+	div4.appendChild(a6Tag);
+	div4.appendChild(a7Tag);
+	div4.style.display = 'inline-block';
+	
+	
+	div2.appendChild(input);
+	div2.appendChild(div3);
+	div2.appendChild(div4);
+	div2.appendChild(div5);
+	
+	div[0].appendChild(div2);
+}
+
+function create_anchor(href,str)
+{
+	var a = document.createElement('a');
+	a.setAttribute('href',href);
+	a.innerHTML = str;
+	
+	return a;
+}
+
+function get_index()
+{
+	for(var i=0;i<delivery_arr.length;i++)
+	{
+		if(email_id == delivery_arr[i].Email)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+function open_page()
+{
+	window.location = "add to cart.html";
+}
+</script>
+</body>
+</html>

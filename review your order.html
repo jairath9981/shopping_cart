@@ -1,0 +1,390 @@
+<html>
+<body>
+<div style = "dispaly:inline-table; width:70%;float:left">
+<div id="rv1"></div>
+</div>
+<div id = "placeYourOrder1" style = "dispaly:inline-table; float:left; margin-top:13%; width:30%; position:static;"> </div>
+<script>
+var mdiv = document.getElementById("rv1");
+
+var cart_arr = [];
+var current_user_cart = [];
+var delivery_info = [];
+var orderHeader = [];
+var orderFooter = [];
+
+var email_id = JSON.parse(localStorage.currentUser);
+
+var order_id = 100;
+var total_price = 0;
+var index = -1;
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{
+	var img = document.createElement('img');
+	img.src = 'logo.png';
+	img.style.width = "96px";
+	img.style.height = "18%";
+	
+	var span = document.createElement('span');
+	var txt = document.createTextNode('Review your order');
+	span.appendChild(txt);
+	
+	mdiv.appendChild(img);
+	mdiv.appendChild(line_break());
+	mdiv.appendChild(span);
+	mdiv.appendChild(line_break());  mdiv.appendChild(line_break());  mdiv.appendChild(line_break());
+	
+	take();
+	
+	put_heading_div();
+	
+	show_products_div();
+	
+	place_oerder_div();
+}
+
+function line_break()
+{
+	var br = document.createElement('br');
+	return br;
+}
+
+function take()
+{
+	if(localStorage.deliveryRecord)
+	{
+		delivery_info = JSON.parse(localStorage.deliveryRecord);
+	}
+	
+	if(localStorage.OrderHeaderRecord)
+	{
+		orderHeader = JSON.parse(localStorage.OrderHeaderRecord);
+	}
+	
+	if(localStorage.OrderFooterRecord)
+	{
+		orderFooter = JSON.parse(localStorage.OrderFooterRecord);
+		
+		var max = -1;
+		for(var i=0;i<orderFooter.length;i++)
+		{
+			if(max<orderFooter[i].Order_id)
+			{
+				max = orderFooter[i].Order_id;
+			}
+		}
+		max++;
+		order_id = max;
+	}
+	
+	if(localStorage.cartRecord)
+	{
+		cart_arr = JSON.parse(localStorage.cartRecord);
+		
+		for(var i = 0; i<cart_arr.length;i++)
+		{
+			if(cart_arr[i].User == email_id)
+			{
+				current_user_cart.push(cart_arr[i]);
+				total_price = parseInt(total_price + (cart_arr[i].Quantity*cart_arr[i].Price));
+			}
+		}
+	}
+
+	update_cart_arr();
+}
+
+function update_cart_arr()
+{
+	cart_arr = cart_arr.filter( function(item) 
+								{
+									return !current_user_cart.includes(item); 
+								}
+							  )
+									  
+}
+
+function put_heading_div()
+{
+	var div = document.createElement('div');
+	
+	var div_s = document.createElement('div');
+	var div_p = document.createElement('div');
+	
+	index = get_index_of_delivery(delivery_info);
+	
+	div_s.appendChild(span_creater("Shipping address    "));
+	div_s.appendChild(create_anchor("delivery information2.html","Change"));
+	div_s.appendChild(line_break());
+	div_s.appendChild(span_creater(delivery_info[index].Name));
+	div_s.appendChild(line_break());
+	div_s.appendChild(span_creater(delivery_info[index].Address));
+	div_s.appendChild(line_break());
+	div_s.appendChild(span_creater(delivery_info[index].Town+", "+delivery_info[index].Pin));
+	div_s.appendChild(line_break());
+	div_s.appendChild(span_creater("Phone: "+delivery_info[index].Mobile));
+	div_s.appendChild(line_break());
+
+	add_styles(div_s,"50%");
+	
+	div_p.appendChild(span_creater("Payment method    "));
+	div_p.appendChild(create_anchor("payment.html","Change"));
+	div_p.appendChild(line_break());
+	div_p.appendChild(span_creater("Pay on delivery (Cash)"));
+	div_p.appendChild(line_break());
+	
+	add_styles(div_p,"20%");
+	
+	div.appendChild(div_s);
+	div.appendChild(div_p);
+	
+	div.style.border = "thin solid gray";
+	div.style.width = "50%";
+	mdiv.appendChild(div);
+}
+
+function get_index_of_delivery(arr,req,req2)
+{
+	for(var i = 0;i<arr.length;i++)
+	{	
+		if(arr[i].Email == email_id)
+		{
+			return i;
+		}
+	}
+}
+
+function span_creater(msg)
+{
+	var span = document.createElement('span');
+	var txt = document.createTextNode(msg);
+	span.appendChild(txt);
+	return span;
+}
+
+function create_anchor(href,str)
+{
+	var a = document.createElement('a');
+	a.setAttribute('href',href);
+	a.innerHTML = str;
+	
+	return a;
+}
+
+function add_styles(div,x)
+{
+	div.style.display = 'inline-table';
+	div.style.width = x;
+}
+
+function show_products_div()
+{
+	for(var i = 0;i<current_user_cart.length;i++)
+	{
+		var item = current_user_cart[i].Name ;
+		var price = current_user_cart[i].Price ;
+		var quant = current_user_cart[i].Quantity ;
+		show_products_div_helper(item,price,quant);
+	}
+}
+
+function show_products_div_helper(item,price,quant)
+{
+	var div = document.createElement('div');
+	
+	var today = get_date();
+	var es_date = addDays(today,5);
+	
+	div.appendChild(span_creater("Estimated delivery:  "));
+	div.appendChild(span_creater(es_date));
+	
+	div.appendChild(line_break());  div.appendChild(line_break());
+	
+	div.appendChild(span_creater("Item: "+item));
+	div.appendChild(line_break());
+	
+	div.appendChild(span_creater("₹"+price));
+	div.appendChild(line_break());
+	
+	div.appendChild(span_creater("Quantity: "+quant+"  "));
+	div.appendChild(create_anchor("change.html","Change"));
+	div.appendChild(line_break());
+	
+	div.style.height = "20%";
+	div.style.width = "40%"
+	div.style.marginTop = "2%";
+	div.style.border = "thin solid gray";
+	
+	mdiv.appendChild(div);
+}
+
+function get_date()
+{
+	var today = new Date();
+	var dd = today.getDate();
+	var mm = today.getMonth()+1;                //January is 0!
+	var yyyy = today.getFullYear();
+
+	if(dd<10) {
+		dd = '0'+dd
+	} 
+
+	if(mm<10) {
+		mm = '0'+mm
+	} 
+
+	today = mm + '/' + dd + '/' + yyyy;
+	return today;
+}
+
+function addDays(date,days)
+{
+	var result = new Date(date);
+	result.setDate(result.getDate() + days);
+	
+	var dd = result.getDate();
+	var mm = result.getMonth()+1;                //January is 0!
+	var yyyy = result.getFullYear();
+
+	if(dd<10) {
+		dd = '0'+dd
+	} 
+
+	if(mm<10) {
+		mm = '0'+mm
+	} 
+
+	result = mm + '/' + dd + '/' + yyyy;
+	return result;	
+}
+
+function place_oerder_div()
+{
+	var pm_div = document.getElementById('placeYourOrder1');
+	var div = document.createElement('div');
+	
+	var button = create_button("pyo1","Place your order");
+	button.addEventListener('click',function()
+									{
+										place_order();
+									}
+						   );
+	div.appendChild(button);
+	
+	div.appendChild(line_break());  div.appendChild(line_break());
+	
+	div.appendChild(span_creater("Order Summary"));
+	div.appendChild(line_break());
+	
+	var span_item = span_creater("Items : ");
+	span_item.style.marginRight = "15%";
+	
+	div.appendChild(span_item);
+	div.appendChild(span_creater("₹"+total_price));
+	div.appendChild(line_break());
+	
+	div.appendChild(span_creater("---------------------------------"));
+	div.appendChild(line_break());
+	
+	var span_order = span_creater("Order Total: ");
+	span_order.style.marginRight = "6%";
+	
+	div.appendChild(span_order);
+	div.appendChild(span_creater("₹"+total_price));
+	div.appendChild(line_break());
+	
+	pm_div.appendChild(div);
+	
+	
+}
+
+function create_button(id,text)
+{
+	var button = document.createElement("Button");
+	var  button_text = document.createTextNode(text);
+	button.appendChild(button_text);
+	button.setAttribute("id",id);
+	button.style.backgroundColor = "orange";
+	return button;
+}
+
+function place_order()
+{
+	crate_header_of_order();
+	create_footer_of_order();
+	remove_from_cart();
+}
+
+function crate_header_of_order()
+{
+    var date = get_date();
+	
+	var name = delivery_info[index].Name;
+	var address = delivery_info[index].Address;
+
+	var obj = create_obj(date,name,address);
+	
+	orderHeader.push(obj);
+	
+	add_in_local_storage();
+}
+
+function create_obj(date,name,address)
+{
+	var obj = {
+		Order_id:order_id,
+		Name:name,
+		Email_id:email_id,
+		Address:address,
+		Order_date:date,
+		Status:"Pending",
+		Total:total_price
+	};
+	return obj;
+}
+
+function add_in_local_storage()
+{
+	localStorage.OrderHeaderRecord = JSON.stringify(orderHeader);
+}
+
+function create_footer_of_order()
+{
+	for(var i=0;i<current_user_cart.length;i++)
+	{
+	   var x = current_user_cart[i].Price*current_user_cart[i].Quantity;
+	   var obj = create_obj_footer(current_user_cart[i].Name,current_user_cart[i].Price,current_user_cart[i].Quantity,x);
+	   orderFooter.push(obj);
+	   add_in_local_storage_footer();
+	}
+}
+
+function  create_obj_footer(prod_name,prod_price,prod_quantity,x)
+{
+	var obj = {
+		Order_id:order_id,
+		Product_name:prod_name,
+	    Product_price:prod_price,
+		Product_quantity:prod_quantity,
+		Sub_total:x
+	};
+	return obj;
+}
+
+function  add_in_local_storage_footer()
+{
+	localStorage.OrderFooterRecord = JSON.stringify(orderFooter);
+}
+
+function remove_from_cart()
+{
+	localStorage.cartRecord = JSON.stringify(cart_arr);
+	window.location = "cart.html";
+}
+</script>
+</body>
+</html>

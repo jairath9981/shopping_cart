@@ -1,0 +1,77 @@
+<html>
+<body>
+<table id="myTable">
+</table>
+<script>
+
+var total_customer = [];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{
+	retrieve_from_local_storage();
+	fill_otp();
+	show_customers();
+}
+
+function retrieve_from_local_storage()
+{
+	if(localStorage.customerRecord)
+	{
+		total_customer = JSON.parse(localStorage.customerRecord);
+	}
+}
+
+function fill_otp()
+{
+	for(var i = 0 ;i<total_customer.length;i++)
+	{
+		if(total_customer[i].Status == -1)
+		{
+			var x = Math.floor((Math.random() * 10000) + 1);
+			total_customer[i].OTP = x;
+		}
+	}
+	 add_in_local_storage();
+}
+
+function add_in_local_storage()
+{
+	localStorage.customerRecord = JSON.stringify(total_customer);
+}
+
+
+function show_customers()
+{
+	for(var i=0; i<total_customer.length; i++)
+	{
+		if(total_customer[i].Status == 1)
+		{
+			display_customers(total_customer[i].Name,total_customer[i].Email);
+		}
+	}
+}
+
+function display_customers(name,email) 
+{
+    var table = document.getElementById("myTable");
+    var row = table.insertRow(table.rows.length);
+	
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+	
+    cell1.innerHTML = name;
+	cell1.style.width = "10%";
+	cell1.style.textAlign = "center";
+	
+    cell2.innerHTML = email;
+	cell2.style.width = "25%";
+	cell2.style.textAlign = "center";
+	
+}
+
+</script>
+</body>
+</html>

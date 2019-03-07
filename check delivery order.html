@@ -1,0 +1,155 @@
+<html>
+<body>
+<div id="ryo1"></div>
+<script>
+
+var email_id = JSON.parse(localStorage.currentUser);
+var mdiv = document.getElementById("ryo1");
+
+var delivery_info = [];
+var cart_arr = [];
+var current_user_cart = [];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+
+
+function init()
+{
+	var img = document.createElement('img');
+	img.src = 'logo.png';
+	img.style.width = "96px";
+	img.style.height = "18%";
+	
+	var span = document.createElement('span');
+	var txt = document.createTextNode('Choose your delivery option');
+	span.appendChild(txt);
+	
+	mdiv.appendChild(img);
+	mdiv.appendChild(line_break());
+	mdiv.appendChild(span);
+	mdiv.appendChild(line_break());
+	shipment_div();
+	
+	button_div();
+}
+
+function line_break()
+{
+	var br = document.createElement('br');
+	return br;
+}
+
+function shipment_div()
+{
+	var shipment = 1;
+	if(localStorage.deliveryRecord)
+	{
+		delivery_info = JSON.parse(localStorage.deliveryRecord);
+	}
+	var index = get_index();
+	var str = "Deliver to "+delivery_info[index].Name+" , "+delivery_info[index].Address+" , "+delivery_info[index].Town;
+	if(localStorage.cartRecord)
+	{
+		cart_arr = JSON.parse(localStorage.cartRecord);
+
+		for(var i = 0; i<cart_arr.length;i++)
+		{
+			if(cart_arr[i].User == email_id)
+			{
+				current_user_cart.push(cart_arr[i]);
+			}
+		}
+		length = current_user_cart.length;
+		var div = document.createElement('div');
+		for(var i = 0; i<length;i++)
+		{
+			shipment_div_helper(shipment,str,current_user_cart[i].Name,current_user_cart[i].Price,current_user_cart[i].Quantity,length,div);
+			shipment++;
+		}
+		div.style.display = "inline-table";
+		div.style.float = "left";
+		mdiv.appendChild(div);
+	}
+}
+
+function shipment_div_helper(sh,str,pro_name,pro_price,pro_quant,total,div1)
+{
+	var div = document.createElement('div');
+	
+	div.appendChild(line_break());
+	div.appendChild(span_creater("Shipment "+sh+" of "+total));
+	div.appendChild(line_break());
+	div.appendChild(span_creater(str));
+	div.appendChild(line_break());
+	div.appendChild(line_break());
+	div.appendChild(span_creater("Product Name : "+pro_name));
+	div.appendChild(line_break());
+	div.appendChild(span_creater("Product Price : ₹"+pro_price+"/ - "+" Quantity : "+pro_quant));
+	div.appendChild(line_break());
+	
+	var a = document.createElement('a');
+	a.setAttribute('href','change.html');
+	a.innerHTML = 'Change quantities or delete';
+	div.appendChild(a);
+	
+	div.appendChild(line_break());
+	
+	
+	div1.appendChild(div);
+	
+}
+
+function  get_index()
+{
+	for(var i=0;i<delivery_info.length;i++)
+	{
+		if(delivery_info[i].Email == email_id)
+		{
+			return i;
+		}
+	}
+}
+
+function span_creater(msg)
+{
+	var span = document.createElement('span');
+	var txt = document.createTextNode(msg);
+	span.appendChild(txt);
+	return span;
+}
+
+function button_div()
+{
+	var div = document.createElement('div');
+	var button = create_button("Countinue");
+	button.addEventListener('click',function()
+									{
+										payment_mode();
+									}
+						   );
+	div.appendChild(button);
+	div.style.display = "inline-table";
+	div.style.marginLeft = "855";
+	mdiv.appendChild(div);
+
+}
+
+function create_button(text)
+{
+	var button = document.createElement("Button");
+	var  button_text = document.createTextNode(text);
+	button.appendChild(button_text);
+	button.style.backgroundColor = "orange";
+	button.style.marginLeft = "35%";
+	return button;
+}
+
+function payment_mode()
+{
+	window.location = 'payment.html';
+}
+</script>
+</body>
+</html>

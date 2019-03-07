@@ -1,0 +1,405 @@
+<html>
+<body>
+<div id="change1"></div>
+<script>
+
+var email_id = JSON.parse(localStorage.currentUser);
+var mdiv = document.getElementById("change1");
+
+var delivery_info = [];
+var cart_arr = [];
+var current_user_cart = [];
+var product_arr = [];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+
+
+function init()
+{
+	var img = document.createElement('img');
+	img.src = 'logo.png';
+	img.style.width = "96px";
+	img.style.height = "18%";
+	
+	var span = document.createElement('span');
+	var txt = document.createTextNode('Edit quantities');
+	span.appendChild(txt);
+	
+	mdiv.appendChild(img);
+	mdiv.appendChild(line_break());
+	mdiv.appendChild(span);
+	mdiv.appendChild(line_break());  mdiv.appendChild(line_break());  mdiv.appendChild(line_break());
+	modify_div();
+	
+	var button = create_button("py1","Continue");
+	button.style.float = "right";
+	button.addEventListener('click',function()
+									{
+										payment_mode();
+									}
+						   );
+	mdiv.appendChild(button);
+}
+
+function line_break()
+{
+	var br = document.createElement('br');
+	return br;
+}
+
+function modify_div()
+{
+	if(localStorage.deliveryRecord)
+	{
+		delivery_info = JSON.parse(localStorage.deliveryRecord);
+	}
+	if(localStorage.productRecord)
+	{
+		product_arr = JSON.parse(localStorage.productRecord);
+	}
+	var index = get_index();
+	var str = delivery_info[index].Name+", "+delivery_info[index].Address+", "+delivery_info[index].Town+", "+delivery_info[index].Pin;
+	if(localStorage.cartRecord)
+	{
+		cart_arr = JSON.parse(localStorage.cartRecord);
+
+		for(var i = 0; i<cart_arr.length;i++)
+		{
+			if(cart_arr[i].User == email_id)
+			{
+				current_user_cart.push(cart_arr[i]);
+			}
+		}
+		length = current_user_cart.length;
+		var div1 = document.createElement('div');
+		var div_item = document.createElement('div');
+		var div_quant = document.createElement('div');
+		var div_send = document.createElement('div');
+		for(var i = 0; i<length;i++)
+		{
+		   if(i==0)
+		   {
+				insert_heading(div_item,div_quant,div_send);
+				add_style(div_item,div_quant,div_send);
+				div1.appendChild(div_item);
+				div1.appendChild(div_quant);
+				div1.appendChild(div_send);
+				
+				div1.style.verticalAlign = "top";
+				div1.style.height = "8%";
+	
+				mdiv.appendChild(div1);
+		   }
+		   var id = current_user_cart[i].Id_cart
+		   modify_div_helper(str,current_user_cart[i].Name,current_user_cart[i].Price,current_user_cart[i].Quantity,id);
+		}
+		
+		
+		
+		
+	}
+}
+
+function modify_div_helper(str,pro_name,pro_price,pro_quant,id)
+{
+    var div1 = document.createElement('div');
+	var divid = "Div"+id;
+	div1.setAttribute("id",divid);
+	
+ 	var div_item = document.createElement('div');
+	var div_quant = document.createElement('div');
+	var div_send = document.createElement('div');
+	
+	div_item.appendChild(span_creater("Product Name : "+pro_name));
+	div_item.appendChild(line_break());
+	div_item.appendChild(span_creater("₹"+pro_price));
+	div_item.appendChild(line_break());
+	div_item.appendChild( button_creater(id,"Delete",0));
+	
+	var input = take_input(id,pro_quant);
+	
+	var button =  button_creater(id,"Update",1);
+	
+
+	div_quant.appendChild(input);
+	div_quant.appendChild(line_break());
+	div_quant.appendChild(button);
+	div_quant.appendChild(line_break());   div_quant.appendChild(line_break()); 
+	
+
+	div_send.appendChild(span_creater(str));
+	div_send.appendChild(line_break());  div_send.appendChild(line_break());  div_send.appendChild(line_break()); 
+	div_send.appendChild(line_break());
+	
+	add_style(div_item,div_quant,div_send);
+	
+	div1.appendChild(div_item);
+	div1.appendChild(div_quant);
+	div1.appendChild(div_send);
+	
+	div1.style.verticalAlign = "top";
+	div1.style.height = "30%";
+	
+	mdiv.appendChild(div1);
+}
+
+function  get_index()
+{
+	for(var i=0;i<delivery_info.length;i++)
+	{
+		if(delivery_info[i].Email == email_id)
+		{
+			return i;
+		}
+	}
+}
+
+function span_creater(msg)
+{
+	var span = document.createElement('span');
+	var txt = document.createTextNode(msg);
+	span.appendChild(txt);
+	return span;
+}
+
+function button_creater(id,msg,signal)
+{
+	var button = create_button(id,msg);
+	if(signal == 1)
+	{
+		button.addEventListener('click',function()
+										{
+											check(id);
+										}
+							   );
+	}
+	if(signal == 0)
+	{
+		button.addEventListener('click',function()
+										{
+											var divid = "Div"+id;
+											delete_div(divid,id);
+										}
+							   );
+	}
+						  
+	
+	return button;
+
+}
+
+function create_button(id,text)
+{
+	var button_id = text+id;
+	var button = document.createElement("Button");
+	var  button_text = document.createTextNode(text);
+	button.appendChild(button_text);
+	button.setAttribute("id",button_id);
+	button.style.backgroundColor = "orange";
+	return button;
+}
+
+function insert_heading(div_item,div_quant,div_send)
+{
+   div_item.appendChild(span_creater('Items'));
+   div_quant.appendChild(span_creater('Qty'))
+   div_send.appendChild(span_creater('Send to:'));
+}
+
+function take_input(id,quant)
+{
+	var input = document.createElement("input");
+	input.setAttribute('type',"text"); 
+	input.setAttribute("id",id);
+	input.defaultValue = quant;
+	return input;
+}
+
+function payment_mode()
+{
+	window.location = 'payment.html';
+}
+
+function add_style(div_item,div_quant,div_send)
+{
+	div_item.style.display = "inline-table";
+	div_item.style.width = "40%";
+	div_item.style.verticalAlign = "top";
+		
+	div_quant.style.display = "inline-table";
+	div_quant.style.width = "20%";
+	div_quant.style.verticalAlign = "top";
+		
+	div_send.style.display = "inline-table";
+	div_send.style.width = "40%";
+	div_send.style.verticalAlign = "top";
+		
+	div_item.style.float = "left";
+	div_quant.style.float = "left";
+	div_send.style.float = "left";
+}
+
+function delete_div(id,id1)
+{	
+	var index = big_cart_index(id1);
+
+	var value = cart_arr[index].Quantity;
+	cart_arr.splice(index,1)
+	modify_local_storage();
+			
+	var prod_index = get_prod_index(cart_arr[index].Id_product);
+	product_arr[prod_index].Quantity = product_arr[prod_index].Quantity + Quantity;
+	modify_local_storage_product_admin();
+	
+	var myNode = document.getElementById(id);
+	while (myNode.firstChild) 
+	{
+		myNode.removeChild(myNode.firstChild);
+	}
+	
+	myNode.parentNode.removeChild(myNode);         // delete current node...........
+}
+
+function check(id)
+{
+	var i = validate(id);
+	if(i == 1)
+	{
+		var value  = document.getElementById(id).value;
+		var x = value.trim();
+		if(x == 0)
+		{
+			var divid = "Div"+id;
+			delete_div(divid,id);
+			return ;
+		}
+		var index = get_current_user_cart_index(id);
+		
+		var prod_index =  get_prod_index(current_user_cart[index].Id_product);
+		
+		check_remaining(x,index,prod_index,id);
+	
+	}
+	if(i == 0)
+	{
+		var index = get_current_user_cart_index(id);
+		
+		var input  = document.getElementById(id);
+		input.value = current_user_cart[index].Quantity;
+		
+	}
+	
+}
+
+function validate(id)
+{
+	var value  = document.getElementById(id).value;
+	var flag = 0;
+	var error = 0;
+	
+	for(var i=0;i<value.length;i++)
+	{
+		if(value.charCodeAt(i)>=48 && value.charCodeAt(i)<=57)
+		{
+			flag=1;
+		}
+		else if(flag == 1)
+		{
+			error = 1;
+			break;
+		}
+		else if(flag == 0 && value.charCodeAt(i)!=32)
+		{
+			error = 1;
+			break;
+		}
+	}
+	if(error == 1 || flag == 0)
+	{
+		alert("Wrong Format of Quantity");
+		return 0;
+	}
+	return 1;
+}
+
+function get_current_user_cart_index(id)
+{
+	length = current_user_cart.length;
+	for(var i = 0; i<length;i++)
+	{
+		if(current_user_cart[i].Id_cart == id)
+		{
+			return i;
+		}
+	}
+}
+
+function get_prod_index(prod_id)
+{
+	length = product_arr.length;
+	for(var i = 0; i<length;i++)
+	{
+		if(product_arr[i].Id == prod_id)
+		{
+			return i;
+		}
+	}
+}
+
+function check_remaining(x,cart_user_index,prod_index,id)
+{
+	var diff = x - current_user_cart[cart_user_index].Quantity;
+	//alert(prod_index);
+	if(parseInt(diff)<0)
+	{
+		var index = big_cart_index(id);
+		cart_arr[index].Quantity = parseInt(x);
+		modify_local_storage();
+		
+		product_arr[prod_index].Quantity = parseInt(product_arr[prod_index].Quantity) + parseInt(diff*-1);
+		modify_local_storage_product_admin();
+	}
+	if(parseInt(diff)>0)
+	{
+		if(parseInt(product_arr[prod_index].Quantity)>=parseInt(diff))
+		{
+			var index = big_cart_index(id);
+			cart_arr[index].Quantity = parseInt(x);
+			modify_local_storage();
+			
+			product_arr[prod_index].Quantity = product_arr[prod_index].Quantity - diff;
+			modify_local_storage_product_admin();
+		}
+		else
+		{
+			alert("You are not allowed to Buy this much Quantity");
+		}
+	}
+}
+
+function big_cart_index(id)
+{
+	length = cart_arr.length;
+	for(var i = 0; i<length;i++)
+	{
+		if(cart_arr[i].Id_cart == id)
+		{
+			return i;
+		}
+	}
+}
+
+function modify_local_storage()
+{
+	localStorage.cartRecord = JSON.stringify(cart_arr);
+}
+
+function modify_local_storage_product_admin()
+{
+	localStorage.productRecord = JSON.stringify(product_arr);
+}
+</script>
+</body>
+</html>

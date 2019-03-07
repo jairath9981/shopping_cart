@@ -1,0 +1,376 @@
+<html>
+<body>
+<h1 id="h1_create_account1">Create account</h1>
+<div id ="div_create_account1"> </div>
+<script>
+
+var customer = [];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+var h1 = document.getElementById("h1_create_account1");
+h1.addEventListener("click", function()
+							{
+								if(h1.style.display === 'block')
+								{
+								     h1.style.display = 'none';
+									 create_account_panel();
+								}
+								else
+								{
+									h1.style.display = 'block' ;
+								}
+								
+							}
+					);
+
+function create_account_panel()
+{
+    var div = document.getElementById("div_create_account1");
+	
+	var big_div = document.createElement("div");
+	big_div.setAttribute("id", "big_div1");
+	
+	var br1 = document.createElement('br'); 
+	var br2 = document.createElement('br'); 
+	var br3 = document.createElement('br'); 
+	var br4 = document.createElement('br'); 
+	
+	var div_name = create_panel_helper("Your name : ","div_name1","input_name1","text");
+	var div_email = create_panel_helper("Email : ","div_email1","input_email1","text");
+	var div_pass = create_panel_helper("Password : ","div_pass1","input_pass1","password");
+	var div_re_pass = create_panel_helper("Re-enter password : ","div_re_pass1","input_re_pass1","password");
+	
+	var button = document.createElement("Button");
+	button.setAttribute("id", "button_create_account1");
+	var  button_text = document.createTextNode("Create your account");
+	button.appendChild(button_text);
+	button.addEventListener('click',function()
+												{	
+													Validation();
+												}
+								   );
+	
+	big_div.appendChild(div_name);  
+	big_div.appendChild(br1);
+	big_div.appendChild(div_email);
+	big_div.appendChild(br2);
+	big_div.appendChild(div_pass);
+	big_div.appendChild(br3);
+	big_div.appendChild(div_re_pass);
+	big_div.appendChild(br4);
+	big_div.appendChild(button);
+	
+	div.appendChild(big_div); 
+}
+
+function create_panel_helper(str,id1,id2,type)
+{
+    var div = document.createElement("div");
+	div.setAttribute("id", id1);
+	
+	var span = document.createElement('span');
+	var text = document.createTextNode(str);
+	
+	span.appendChild(text);
+	div.appendChild(span);
+	
+	var line_break = document.createElement('br');
+	div.appendChild(line_break);
+	
+	var input = document.createElement("input"); 
+	input.setAttribute('type',type); 
+	input.setAttribute("id", id2);
+	div.appendChild(input);
+	
+	return div;
+}
+
+function Validation()
+{
+	var name = document.getElementById("input_name1").value;
+	var check_name = isNameValid(name);
+	
+	var email = document.getElementById("input_email1").value;
+	var email2 = email.trim()
+	var check_email = isEmailValid(email2);
+	
+	var password = document.getElementById("input_pass1").value;
+	var check_passw = isPasswordValid(password);
+	
+	var re_password = document.getElementById("input_re_pass1").value;
+	var check_re_passw = isRePasswordValid(password,re_password);
+	
+	
+	if(check_name == true && check_email == true && check_passw == true && check_re_passw == true)
+	{
+		var obj = create_obj(name,email,password);
+		var check_customer = duplicate_customer(email2);
+		if(check_customer == -1)   // already login customer
+		{
+			clear_login_panel();
+		}
+		else if(check_customer == -2)     // new customer
+		{
+			customer.push(obj);
+			alert("your account request is forwarded");
+			add_in_local_storage();
+			delete_panel();
+			h1.style.display = 'block' ;
+		}
+		else if(check_customer>=0)     // no logined customer
+		{
+			check_customer[check_customer] = obj;
+			alert("your account request is in process");
+			add_in_local_storage();
+			delete_panel();
+			h1.style.display = 'block' ;
+		}
+	}
+
+}
+
+function isNameValid(name)
+{
+	var l = name.length;
+	var flag = 0;
+	var div = document.getElementById("div_name1");
+	delete_last_label(div);
+	if(l==0)
+	{
+		var label = label_creater("Name filled can't be empty");
+		div.appendChild(label);
+		return false;
+	}
+	else
+	{
+		for(var i = 0 ;i<l;i++)
+		{
+		   if((name.charCodeAt(i)>=65 && name.charCodeAt(i)<=90) || (name.charCodeAt(i)>=97 && name.charCodeAt(i)<=122))
+		   {
+				flag = 1;
+		   }
+		   else if(name.charAt(i) == ' ')
+		   {
+				
+		   }
+		   else
+		   {
+				var label = label_creater("Invalid name");
+				div.appendChild(label);
+				return false;
+		   }
+		}
+		if(flag == 0)
+		{
+			var label = label_creater("you fill this only by spaces");
+			div.appendChild(label);
+			return false;
+		}
+		else if(flag == 1)
+		{
+			return true;
+		}
+	}
+}
+
+function isEmailValid(email)
+{
+	var div = document.getElementById("div_email1")
+	delete_last_label(div);
+	var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+	if(email.match(mailformat))
+	{
+		return true;
+	}
+	var label = label_creater("Invalid email");
+	div.appendChild(label);
+	return (false)
+}
+
+function isPasswordValid(pass)
+{
+	var len = pass.length;
+	var flag_length = 0;
+	var flag_capital = 0;
+	var flag_lower = 0;
+	var flag_number = 0;
+	var div = document.getElementById("div_pass1")
+	delete_last_label(div);
+	if(len>=8)
+	{
+		flag_length = 1;
+	}
+	else
+	{
+		var label = label_creater("Password must contain 8 characters");
+		div.appendChild(label);
+		return false;
+	}
+	for(var i=0;i<len;i++)
+	{
+		if(pass.charCodeAt(i)>=65 && pass.charCodeAt(i)<=90)
+		{
+			flag_capital = 1;
+		}
+		
+		if(pass.charCodeAt(i)>=97 && pass.charCodeAt(i)<=122)
+		{
+			flag_lower = 1;
+		}
+		
+		if(pass.charCodeAt(i)>=48 && pass.charCodeAt(i)<=57)
+		{
+			flag_number = 1;
+		}
+		
+		if(flag_capital == 1 && flag_lower == 1 && flag_number == 1)
+		{
+			return true;
+		}
+		
+	}
+	if(flag_capital == 0)
+	{
+		var label = label_creater("Password must contain atleast one upper case character");
+		div.appendChild(label);
+		return false;
+	}
+	if(flag_lower == 0)
+	{
+		var label = label_creater("Password must contain atleast one lower case character");
+		div.appendChild(label);
+		return false;
+	}
+	if(flag_number == 0)
+	{
+		var label = label_creater("Password must contain atleast one numeric value");
+		div.appendChild(label);
+		return false;
+	}
+	
+}
+
+function isRePasswordValid(pass,re_pass)
+{
+	var div = document.getElementById("div_re_pass1");
+	delete_last_label(div);
+	if((pass.localeCompare(re_pass))==0)  // string compare 
+	{
+		return true;
+	}
+	var label = label_creater("Password donot match");
+	div.appendChild(label);
+	return false;
+}
+
+
+function duplicate_customer(email)
+{
+	for(i=0;i<customer.length;i++)
+	{
+		if(email.localeCompare(customer[i].Email)==0)
+		{
+			if(customer[i].Status == 1)
+			{
+				alert("This email id already registered!!!");
+				return -1;
+			}
+			return i;
+		}
+	}
+	return -2;
+}
+
+function label_creater(str)
+{
+	var label = document.createElement("label");
+	var mssg = document.createTextNode(str);
+	label.appendChild(mssg);
+	return label;
+}
+
+function delete_last_label(node)
+{
+	var element = node.lastChild.nodeName;
+	if(element == "LABEL")
+	{
+		node.removeChild(node.lastChild);
+	}
+}
+
+
+function create_obj(name,email,pass)
+{
+	var obj = {
+		Name:name,
+		Email:email,
+		Password:pass,
+		Status:-1,
+		OTP:-1
+	};
+	return obj;
+}
+
+function add_in_local_storage()
+{
+	//localStorage.clear();
+	
+	localStorage.customerRecord = JSON.stringify(customer);
+}
+
+function init()
+{
+	if(localStorage.customerRecord)
+	{
+		customer = JSON.parse(localStorage.customerRecord);
+	}
+}
+
+function delete_panel()
+{
+	var div_re_password = document.getElementById("div_re_pass1");
+    delete_all_its_child(div_re_password);
+	
+	var div_password = document.getElementById("div_pass1");
+	delete_all_its_child(div_password);
+	
+	var email = document.getElementById("div_email1");
+	delete_all_its_child(email);
+	
+	var name = document.getElementById("div_name1");
+	delete_all_its_child(name);
+	
+	var div_big = document.getElementById("big_div1");
+	delete_all_its_child(div_big);
+	
+	div_big.parentNode.removeChild(div_big);
+}
+
+
+function delete_all_its_child(node)
+{
+	while (node.firstChild) 
+	{
+		node.removeChild(node.firstChild);
+	}
+}
+
+function clear_login_panel()
+{
+	var name = document.getElementById("input_name1");
+	name.value = "";
+	
+	var email = document.getElementById("input_email1");
+	email.value = ""; 
+	
+	var password = document.getElementById("input_pass1");
+	password.value = "";
+	
+	var re_password = document.getElementById("input_re_pass1");
+	re_password.value = "";
+}
+</script>
+</body>
+</html>

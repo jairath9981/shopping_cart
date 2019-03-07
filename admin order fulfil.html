@@ -1,0 +1,219 @@
+<html>
+<body>
+<h3 id ='Pendingh' >Pending Records</h3>
+<table id ='Pending' ></table>
+<h3 id ='Shippedh'>Shipped Records</h3>
+<table id ='Shipped' ></table>
+<h3 id ='Ofdh' >Out For Delivery Records</h3>
+<table id ='Ofd' ></table>
+<h3 id ='Deliveredh' >Delivered Records</h3>
+<table id ='Delivered' ></table>
+<script>
+
+var order_header = [];
+var order_footer = [];
+var sts = ["Pending", "Shipped", "Ofd", "Delivered"];
+
+var body = document.getElementsByTagName("body")[0];
+body.addEventListener("load", init());
+
+function init()
+{
+	retrive_from_local_storage();
+	change_status();
+	display();
+}
+
+function retrive_from_local_storage()
+{
+	if(localStorage.OrderFooterRecord)
+	{
+		order_footer = JSON.parse(localStorage.OrderFooterRecord);
+	}
+	if(localStorage.OrderHeaderRecord)
+	{
+		order_header = JSON.parse(localStorage.OrderHeaderRecord);
+	}
+}
+
+function display()
+{
+	var pd = 0;   //pending 
+	var shd = 0;    // shipped
+	var ofd = 0;       // out for delivered
+	var dd = 0;         // delivered
+	for(var i=0;i<order_header.length;i++)
+	{
+		for(var j=0;j<order_footer.length;j++)
+		{
+			if(order_header[i].Order_id == order_footer[j].Order_id)
+			{	
+				display_helper(order_header[i].Email_id,order_footer[j].Product_name,order_header[i].Order_date,order_footer[j].Sub_total,order_header[i].Status);
+				if(order_header[i].Status == "Pending")
+				{
+					pd++;
+				}
+				else if(order_header[i].Status == "Shipped")
+				{
+					shd++;
+				}
+				else if(order_header[i].Status == "Ofd")
+				{
+					ofd++;
+				}
+				else
+				{
+					dd++;
+				}
+			}
+		}
+	}
+
+	if(pd == 0)
+	{
+		message("pending","Pendingh");
+	}
+	if(shd == 0)
+	{
+		message("Shipped","Shippedh");
+	}
+	if(ofd == 0)
+	{
+		message("Out For Delivery","Ofdh");
+	}
+	if(dd == 0)
+	{
+		message("Delivered","Deliveredh");
+	}
+	
+}
+
+
+function display_helper(customer,prod_name,order_date,total,id) 
+{
+    var table = document.getElementById(id);
+    var row = table.insertRow(table.rows.length);
+	
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+	var cell3 = row.insertCell(2);
+	var cell4 = row.insertCell(3);
+	
+    cell1.innerHTML = customer;
+	cell1.style.width = "10%";
+	cell1.style.textAlign = "center";
+	
+    cell2.innerHTML = prod_name;
+	cell2.style.width = "25%";
+	cell2.style.textAlign = "center";
+	
+	
+	cell3.innerHTML = order_date;
+	cell3.style.width = "20%";
+	cell3.style.textAlign = "center";
+	
+
+	cell4.innerHTML = total;
+	cell4.style.width = "20%";
+	cell4.style.textAlign = "center";
+}
+
+function message(msg,id)
+{
+    var str = "There is no " + msg + " records";
+	var referenceNode = document.getElementById(id);
+	var text =  document.createTextNode(str);
+	referenceNode.parentNode.insertBefore(text, referenceNode.nextSibling);
+}
+
+function change_status()
+{
+	var today = get_date();
+    var days = 1;
+	for(var i = 0;i<order_header.length;i++)
+	{ 
+	    if(order_header[i].Status!="Delivered")
+		{
+
+			var current_status_index = find(order_header[i].Status);
+			var increment = addDays(order_header[i].Order_date,days);
+			var diff_days = date_diff_indays(increment,today);
+			var new_status_index = current_status_index+diff_days+1;
+			
+			if(new_status_index>3)
+			{
+				new_status_index = 3;
+			}
+			order_header[i].Order_date = today;
+			order_header[i].Status = sts[new_status_index];
+		}
+	}
+	modify_local_storage();
+}
+
+function get_date()
+{
+	var today = new Date();
+	var dd = today.getDate();
+	var mm = today.getMonth()+1;                //January is 0!
+	var yyyy = today.getFullYear();
+
+	if(dd<10) {
+		dd = '0'+dd
+	} 
+
+	if(mm<10) {
+		mm = '0'+mm
+	} 
+
+	today = mm + '/' + dd + '/' + yyyy;
+	return today;
+}
+
+function addDays(date,days)
+{
+	var result = new Date(date);
+	result.setDate(result.getDate() + days);
+	
+	var dd = result.getDate();
+	var mm = result.getMonth()+1;                //January is 0!
+	var yyyy = result.getFullYear();
+
+	if(dd<10) {
+		dd = '0'+dd
+	} 
+
+	if(mm<10) {
+		mm = '0'+mm
+	} 
+
+	result = mm + '/' + dd + '/' + yyyy;
+	return result;	
+}
+
+function date_diff_indays(date1, date2) {
+dt1 = new Date(date1);
+dt2 = new Date(date2);
+return Math.floor((Date.UTC(dt2.getFullYear(), dt2.getMonth(), dt2.getDate()) - Date.UTC(dt1.getFullYear(), dt1.getMonth(), dt1.getDate())) /(1000 * 60 * 60 * 24));
+}
+
+
+function find(curr_status)
+{
+
+	for(var i=0;i<sts.length;i++)
+	{
+	   if(sts[i]==curr_status)
+		{
+			return i;
+		}
+	}
+}
+
+function modify_local_storage()
+{
+	localStorage.OrderHeaderRecord = JSON.stringify(order_header);
+}
+</script>
+</body>
+</html>
